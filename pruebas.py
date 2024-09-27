@@ -40,9 +40,7 @@ def main():
 
             case 2:
                 if ruta:
-                    xml_reader.cargar_archivo(ruta)  # Cargar el archivo otra vez si es necesario
-                    print("")
-                    # xml_reader.lista_matrices.mostrar_matrices()
+                    xml_reader.seleccionar_maquina()  # Llama a la función para seleccionar máquina
                 else:
                     print("Primero debes cargar un archivo en la opción 1")
                 

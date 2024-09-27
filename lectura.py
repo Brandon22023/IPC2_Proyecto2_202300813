@@ -19,7 +19,7 @@ class Maquina:
 class Nodo:
     """Clase para representar un nodo en la lista enlazada."""
     def __init__(self, data):
-        self.data = data  # Los datos del nodo (máquina)
+        self.data = data  # Los datos del nodo (máquina o producto)
         self.siguiente = None  # Apuntador al siguiente nodo
 
 class ListaEnlazada:
@@ -93,7 +93,7 @@ class LecturaXML:
             print(f"\nNombre de la máquina: {maquina.nombre_maquina}")
             print(f"Cantidad de líneas de producción: {maquina.cantidad_lineas}")
             print(f"Cantidad de componentes: {maquina.cantidad_componentes}")
-            print(f"Tiempo de ensamblaje: {maquina.tiempo_ensamblaje} minutos")
+            print(f"Tiempo de ensamblaje: {maquina.tiempo_ensamblaje} segundos")
             print("Productos:")
             actual_producto = maquina.productos.cabeza
             while actual_producto:  # Recorre cada producto
@@ -102,3 +102,57 @@ class LecturaXML:
                 print(f"    Elaboración: {producto.elaboracion}")
                 actual_producto = actual_producto.siguiente  # Avanza al siguiente producto
             actual = actual.siguiente  # Avanza a la siguiente máquina
+
+    def seleccionar_maquina(self):
+        """Permite al usuario seleccionar una máquina y luego muestra sus productos."""
+        actual_maquina = self.lista_maquinas.cabeza
+
+        if actual_maquina is None:
+            print("No hay máquinas cargadas.")
+            return
+
+        # Mostrar las máquinas disponibles
+        indice_maquina = 1
+        while actual_maquina:
+            maquina = actual_maquina.data
+            print(f"{indice_maquina}. {maquina.nombre_maquina}")
+            actual_maquina = actual_maquina.siguiente
+            indice_maquina += 1
+
+        # Solicitar al usuario que seleccione una máquina
+        opcion_maquina = int(input("Selecciona una máquina (número): ")) - 1
+
+        # Volver a recorrer la lista hasta encontrar la máquina seleccionada
+        actual_maquina = self.lista_maquinas.cabeza
+        for _ in range(opcion_maquina):
+            actual_maquina = actual_maquina.siguiente
+
+        maquina_seleccionada = actual_maquina.data
+        self.mostrar_productos(maquina_seleccionada)
+
+    def mostrar_productos(self, maquina):
+        """Muestra los productos de una máquina seleccionada."""
+        actual_producto = maquina.productos.cabeza
+
+        if actual_producto is None:
+            print(f"La máquina {maquina.nombre_maquina} no tiene productos.")
+            return
+
+        # Mostrar los productos disponibles
+        indice_producto = 1
+        while actual_producto:
+            producto = actual_producto.data
+            print(f"{indice_producto}. {producto.nombre_producto}")
+            actual_producto = actual_producto.siguiente
+            indice_producto += 1
+
+        # Solicitar al usuario que seleccione un producto
+        opcion_producto = int(input("Selecciona un producto (número): ")) - 1
+
+        # Volver a recorrer la lista de productos hasta encontrar el seleccionado
+        actual_producto = maquina.productos.cabeza
+        for _ in range(opcion_producto):
+            actual_producto = actual_producto.siguiente
+
+        producto_seleccionado = actual_producto.data
+        print(f"Elaboración del producto {producto_seleccionado.nombre_producto}: {producto_seleccionado.elaboracion}")
