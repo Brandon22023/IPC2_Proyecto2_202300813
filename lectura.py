@@ -1,5 +1,89 @@
 import xml.etree.ElementTree as ET
+class Nodo2:
+    def __init__(self, linea, componente):
+        self.linea = linea  # Línea de ensamblaje
+        self.componente = componente  # Número del componente
+        self.siguiente = None  # Apunta al siguiente nodo
+        self.anterior = None  # Apunta al nodo anterior
+    
 
+class ListaDoblementeEnlazada:
+    def __init__(self):
+        self.primero = None
+        self.ultimo = None
+
+    # Método para agregar un nodo con una línea y un componente
+    def agregar(self, linea, componente):
+        nuevo_nodo = Nodo2(linea, componente)
+        if self.primero is None:  # Si la lista está vacía
+            self.primero = self.ultimo = nuevo_nodo
+        else:  # Agregar al final de la lista
+            self.ultimo.siguiente = nuevo_nodo
+            nuevo_nodo.anterior = self.ultimo
+            self.ultimo = nuevo_nodo
+
+    # Método para buscar el último componente de una línea específica
+    def buscar_ultimo_componente(self, linea):
+        actual = self.primero
+        ultimo_componente = 0
+        while actual is not None:
+            if actual.linea == linea and actual.componente > ultimo_componente:
+                ultimo_componente = actual.componente
+            actual = actual.siguiente
+        return ultimo_componente
+
+    # Método para imprimir las instrucciones
+    def imprimir(self):
+        actual = self.primero
+        while actual is not None:
+            print(f"L{actual.linea}C{actual.componente} = Mover brazo componente {actual.componente}")
+            actual = actual.siguiente
+
+class ProcesadorElaboracion:
+    def __init__(self):
+        self.lista_instrucciones = ListaDoblementeEnlazada()
+
+    # Método para procesar la elaboración de un producto sin usar listas, ni índices ni len()
+    def procesar_elaboracion(self, elaboracion):
+        # Inicializamos un puntero para recorrer la cadena
+        puntero = iter(elaboracion)
+        
+        try:
+            while True:
+                # Buscamos un caracter "L" que indica una línea
+                caracter = next(puntero)
+                if caracter == "L":  # Detectamos el inicio de una línea "L"
+                    linea = int(next(puntero))  # Obtener el número de la línea
+                    next(puntero)  # Saltar el caracter "C"
+                    componente = int(next(puntero))  # Obtener el número del componente
+
+                    # Agregar la instrucción correspondiente a la lista doblemente enlazada
+                    self.lista_instrucciones.agregar(linea, componente)
+
+                    # Saltar el espacio o separador (si existe)
+                    try:
+                        next(puntero)
+                    except StopIteration:
+                        break  # Fin de la cadena
+        except StopIteration:
+            pass  # Fin del iterador
+
+        # Generar las instrucciones basadas en los componentes procesados
+        self.generar_instrucciones()
+
+    # Método para generar las instrucciones finales
+    def generar_instrucciones(self):
+        # Recorremos la lista doblemente enlazada
+        actual = self.lista_instrucciones.primero
+        while actual is not None:
+            # Buscar el último componente procesado en esta línea
+            ultimo_componente = self.lista_instrucciones.buscar_ultimo_componente(actual.linea)
+
+            # Generar instrucciones hasta el último componente
+            for i in range(1, ultimo_componente + 1):
+                print(f"L{actual.linea}C{i} = Mover brazo componente {i}")
+            
+            actual = actual.siguiente
 class Producto:
     """Clase para representar un producto."""
     def __init__(self, nombre_producto, elaboracion):
@@ -128,7 +212,8 @@ class LecturaXML:
             actual_maquina = actual_maquina.siguiente
 
         maquina_seleccionada = actual_maquina.data
-        self.mostrar_productos(maquina_seleccionada)
+        nombre_maquina= self.mostrar_productos(maquina_seleccionada)
+        return nombre_maquina
 
     def mostrar_productos(self, maquina):
         """Muestra los productos de una máquina seleccionada."""
@@ -156,3 +241,4 @@ class LecturaXML:
 
         producto_seleccionado = actual_producto.data
         print(f"Elaboración del producto {producto_seleccionado.nombre_producto}: {producto_seleccionado.elaboracion}")
+        return producto_seleccionado.elaboracion

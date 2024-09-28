@@ -3,18 +3,15 @@ import os
 
 app = Flask(__name__)
 
-# Configuración de la carpeta de subida
-UPLOAD_FOLDER = 'uploads/'
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-# Crear la carpeta de subida si no existe
-if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER)
+
+
 @app.route('/')
 def home():
+    
     return render_template('pagina.html', tab='Tab1')
 
-@app.route('/tab1')
+@app.route('/tab1', methods=['GET', 'POST']) 
 def tab1():
     if request.method == 'POST':
         # Verifica si el formulario tiene el archivo
@@ -29,9 +26,10 @@ def tab1():
         
         # Guarda el archivo en la carpeta de subida
         if file:
-            filepath = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
-            file.save(filepath)
-            return f"Archivo {file.filename} cargado exitosamente."
+            uploaded_file_path = os.path.abspath(file.filename)  # Obtiene el directorio absoluto
+            print (uploaded_file_path)
+            #return f"Archivo {file.filename} cargado. Ruta: {uploaded_file_path}."
+            return render_template('pagina.html', tab='Tab1')
     
     return render_template('pagina.html', tab='Tab1')
 

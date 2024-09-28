@@ -1,7 +1,5 @@
-from lectura import LecturaXML
+from lectura import LecturaXML, ProcesadorElaboracion
 import os
-
-
 def print_menu():
     print("------------------- Menu Principal -------------------")
     print("1. Cargar archivo")
@@ -11,12 +9,12 @@ def print_menu():
     print("5. Generar gráfica")
     print("6. Salida")
     print("--------------------------------------------------------")
-
 def main():
     xml_reader = LecturaXML()  # Instanciar LecturaXML
+    procesador = ProcesadorElaboracion()  # Instanciar ProcesadorElaboracion
     ruta = None  # Inicializar la variable ruta
-
     opcion = 0
+    elaboracion = None
     while opcion != 6:
         
         print_menu()
@@ -31,25 +29,28 @@ def main():
         match opcion:
             case 1:
                 ruta = input("Ingresa la ruta del archivo XML: ")
-
                 if os.path.exists(ruta) and os.path.isfile(ruta):
                     print("Archivo cargado")
                     xml_reader.cargar_archivo(ruta)  # Cargar el archivo aquí
+                   
                 else:
                     print("Error al cargar el archivo. La ruta no es válida o el archivo no existe.")
-
             case 2:
                 if ruta:
-                    xml_reader.seleccionar_maquina()  # Llama a la función para seleccionar máquina
+                #    xml_reader.seleccionar_maquina()  # Llama a la función para seleccionar máquina
+                #     # Asegúrate de que seleccionar_maquina devuelva la máquina seleccionada
+                #    nombre_maquina = xml_reader.maquina_seleccionada  # Supongamos que este atributo almacena la máquina seleccionada
+                #    elaboracion = xml_reader.mostrar_productos(nombre_maquina)  # Pasar el nombre de la máquina
+                #    print("Elaboración: ", elaboracion)
+                    
+                #     # Si necesitas procesar esta elaboración, hazlo aquí
+                #    procesador.procesar_elaboracion(elaboracion)  # Procesa la elaboración obtenida
+                    elaboracion = xml_reader.seleccionar_maquina()  # Obtiene la elaboración del producto
+                    if elaboracion:  # Asegurarse de que se obtuvo la elaboración
+                        procesador.procesar_elaboracion(elaboracion)  # Procesa la elaboración obtenida
                 else:
                     print("Primero debes cargar un archivo en la opción 1")
-                
             case 3:
-                # if ruta:
-                    # nombre_archivo = input("Ingresa el nombre del archivo de salida XML: ")
-                    # xml_reader.escribir_archivo_salida(nombre_archivo)
-                    # print(f"Archivo XML guardado como {nombre_archivo}")
-                # else:
                 print("Primero debes cargar un archivo en la opción 1")
                     
             case 4:
@@ -76,6 +77,5 @@ def main():
                 print("Opción inválida, intenta de nuevo")
                 print("*****************************************")
                 print("")
-
 if __name__ == "__main__":
     main()

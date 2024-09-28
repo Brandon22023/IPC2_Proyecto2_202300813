@@ -72,10 +72,11 @@
         <h2>Contenido de la Pestaña 1</h2>
         <p>Este es el contenido de la primera pestaña.</p>
          <!-- Formulario para cargar el archivo -->
-         <form method="POST" enctype="multipart/form-data">
+         <form method="POST" enctype="multipart/form-data" action="{{ url_for('tab1') }}">
           <label for="file" class="custom-file-upload">Seleccionar archivo</label>
-          <input type="file" name="file" id="file">
-        </form>
+          <input type="file" name="file" id="file" style="display: none;" onchange="this.form.submit();">
+          <input type="submit" value="Cargar archivo" style="display: none;">
+         </form>
       {% elif tab == 'Tab2' %}
         <h2>REPORTE DEL HTML</h2>
         <p>usar tabla de resultados</p>
