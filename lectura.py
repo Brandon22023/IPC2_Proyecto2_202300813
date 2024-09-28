@@ -74,14 +74,17 @@ class ProcesadorElaboracion:
 
     # Método para generar las instrucciones finales
     def generar_instrucciones(self):
-        # Buscar el componente máximo entre todas las líneas
+        # Buscar el componente máximo y mínimo entre todas las líneas
         max_componente_global = 0
+        min_componente_global = float('inf')
         actual = self.lista_instrucciones.primero
         max_linea = 0
 
         while actual is not None:
             if actual.componente > max_componente_global:
                 max_componente_global = actual.componente
+            if actual.componente < min_componente_global:
+                min_componente_global = actual.componente
             if actual.linea > max_linea:
                 max_linea = actual.linea
             actual = actual.siguiente
@@ -94,8 +97,8 @@ class ProcesadorElaboracion:
                 # Marcar la línea como ya impresa
                 lineas_imprimidas.add(actual.linea)
 
-                # Imprimir los componentes desde el 1 hasta el máximo global para cada línea
-                for i in range(1, max_componente_global + 1):
+                # Imprimir los componentes desde el componente mínimo hasta el máximo global para cada línea
+                for i in range(min_componente_global, max_componente_global + 1):
                     if i <= actual.componente:  # Si el componente actual no ha alcanzado el máximo
                         print(f"L{actual.linea}C{i} = Mover brazo componente {i}")
                     else:
@@ -106,7 +109,7 @@ class ProcesadorElaboracion:
         # Imprimir las líneas que no tenían componentes en la entrada original (si las hubiera)
         for linea in range(1, max_linea + 1):
             if linea not in lineas_imprimidas:
-                for i in range(1, max_componente_global + 1):
+                for i in range(min_componente_global, max_componente_global + 1):
                     print(f"L{linea}C{i} = No hacer nada")
 class Producto:
     """Clase para representar un producto."""
