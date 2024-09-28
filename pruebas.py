@@ -37,14 +37,6 @@ def main():
                     print("Error al cargar el archivo. La ruta no es válida o el archivo no existe.")
             case 2:
                 if ruta:
-                #    xml_reader.seleccionar_maquina()  # Llama a la función para seleccionar máquina
-                #     # Asegúrate de que seleccionar_maquina devuelva la máquina seleccionada
-                #    nombre_maquina = xml_reader.maquina_seleccionada  # Supongamos que este atributo almacena la máquina seleccionada
-                #    elaboracion = xml_reader.mostrar_productos(nombre_maquina)  # Pasar el nombre de la máquina
-                #    print("Elaboración: ", elaboracion)
-                    
-                #     # Si necesitas procesar esta elaboración, hazlo aquí
-                #    procesador.procesar_elaboracion(elaboracion)  # Procesa la elaboración obtenida
                     elaboracion = xml_reader.seleccionar_maquina()  # Obtiene la elaboración del producto
                     if elaboracion:  # Asegurarse de que se obtuvo la elaboración
                         procesador.procesar_elaboracion(elaboracion)  # Procesa la elaboración obtenida

@@ -15,9 +15,10 @@ class ListaDoblementeEnlazada:
     # Método para agregar un nodo con una línea y un componente
     def agregar(self, linea, componente):
         nuevo_nodo = Nodo2(linea, componente)
-        if self.primero is None:  # Si la lista está vacía
-            self.primero = self.ultimo = nuevo_nodo
-        else:  # Agregar al final de la lista
+        if self.primero is None:
+            self.primero = nuevo_nodo
+            self.ultimo = nuevo_nodo
+        else:
             self.ultimo.siguiente = nuevo_nodo
             nuevo_nodo.anterior = self.ultimo
             self.ultimo = nuevo_nodo
@@ -73,17 +74,40 @@ class ProcesadorElaboracion:
 
     # Método para generar las instrucciones finales
     def generar_instrucciones(self):
-        # Recorremos la lista doblemente enlazada
+        # Buscar el componente máximo entre todas las líneas
+        max_componente_global = 0
         actual = self.lista_instrucciones.primero
-        while actual is not None:
-            # Buscar el último componente procesado en esta línea
-            ultimo_componente = self.lista_instrucciones.buscar_ultimo_componente(actual.linea)
+        max_linea = 0
 
-            # Generar instrucciones hasta el último componente
-            for i in range(1, ultimo_componente + 1):
-                print(f"L{actual.linea}C{i} = Mover brazo componente {i}")
-            
+        while actual is not None:
+            if actual.componente > max_componente_global:
+                max_componente_global = actual.componente
+            if actual.linea > max_linea:
+                max_linea = actual.linea
             actual = actual.siguiente
+
+        # Imprimir las instrucciones para cada línea, asegurándose de no duplicar
+        actual = self.lista_instrucciones.primero
+        lineas_imprimidas = set()  # Para evitar que una línea se repita
+        while actual is not None:
+            if actual.linea not in lineas_imprimidas:
+                # Marcar la línea como ya impresa
+                lineas_imprimidas.add(actual.linea)
+
+                # Imprimir los componentes desde el 1 hasta el máximo global para cada línea
+                for i in range(1, max_componente_global + 1):
+                    if i <= actual.componente:  # Si el componente actual no ha alcanzado el máximo
+                        print(f"L{actual.linea}C{i} = Mover brazo componente {i}")
+                    else:
+                        print(f"L{actual.linea}C{i} = No hacer nada")
+
+            actual = actual.siguiente
+
+        # Imprimir las líneas que no tenían componentes en la entrada original (si las hubiera)
+        for linea in range(1, max_linea + 1):
+            if linea not in lineas_imprimidas:
+                for i in range(1, max_componente_global + 1):
+                    print(f"L{linea}C{i} = No hacer nada")
 class Producto:
     """Clase para representar un producto."""
     def __init__(self, nombre_producto, elaboracion):
