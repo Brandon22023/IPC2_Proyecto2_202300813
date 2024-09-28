@@ -75,42 +75,36 @@ class ProcesadorElaboracion:
     # Método para generar las instrucciones finales
     def generar_instrucciones(self):
         # Buscar el componente máximo y mínimo entre todas las líneas
+        actual = self.lista_instrucciones.primero
         max_componente_global = 0
         min_componente_global = float('inf')
-        actual = self.lista_instrucciones.primero
-        max_linea = 0
 
         while actual is not None:
             if actual.componente > max_componente_global:
                 max_componente_global = actual.componente
             if actual.componente < min_componente_global:
                 min_componente_global = actual.componente
-            if actual.linea > max_linea:
-                max_linea = actual.linea
             actual = actual.siguiente
 
-        # Imprimir las instrucciones para cada línea, asegurándose de no duplicar
-        actual = self.lista_instrucciones.primero
-        lineas_imprimidas = set()  # Para evitar que una línea se repita
-        while actual is not None:
-            if actual.linea not in lineas_imprimidas:
-                # Marcar la línea como ya impresa
-                lineas_imprimidas.add(actual.linea)
+        # Imprimir las líneas en orden de componente
+        for componente in range(min_componente_global, max_componente_global + 1):
+            actual = self.lista_instrucciones.primero
+            existe_accion = False
+            while actual is not None:
+                if actual.componente == componente:
+                    print(f"L{actual.linea}C{actual.componente} = Mover brazo componente {actual.componente}")
+                    existe_accion = True
+                actual = actual.siguiente
 
-                # Imprimir los componentes desde el componente mínimo hasta el máximo global para cada línea
-                for i in range(min_componente_global, max_componente_global + 1):
-                    if i <= actual.componente:  # Si el componente actual no ha alcanzado el máximo
-                        print(f"L{actual.linea}C{i} = Mover brazo componente {i}")
-                    else:
-                        print(f"L{actual.linea}C{i} = No hacer nada")
-
-            actual = actual.siguiente
-
-        # Imprimir las líneas que no tenían componentes en la entrada original (si las hubiera)
-        for linea in range(1, max_linea + 1):
-            if linea not in lineas_imprimidas:
-                for i in range(min_componente_global, max_componente_global + 1):
-                    print(f"L{linea}C{i} = No hacer nada")
+            # Imprimir "No hacer nada" solo si hubo acciones para el componente actual
+            if existe_accion:
+                actual = self.lista_instrucciones.primero
+                while actual is not None:
+                    if actual.componente != componente:
+                        print(f"L{actual.linea}C{componente} = No hacer nada")
+                    actual = actual.siguiente
+            
+            print("")
 class Producto:
     """Clase para representar un producto."""
     def __init__(self, nombre_producto, elaboracion):
