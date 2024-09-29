@@ -37,9 +37,18 @@ def main():
                     print("Error al cargar el archivo. La ruta no es válida o el archivo no existe.")
             case 2:
                 if ruta:
-                    elaboracion = xml_reader.seleccionar_maquina()  # Obtiene la elaboración del producto
-                    if elaboracion:  # Asegurarse de que se obtuvo la elaboración
-                        procesador.procesar_elaboracion(elaboracion)  # Procesa la elaboración obtenida
+                    while True:
+                        elaboracion = xml_reader.seleccionar_maquina()  # Obtiene la elaboración del producto
+                        if elaboracion:  # Asegurarse de que se obtuvo la elaboración
+                            try:
+                                procesador.procesar_elaboracion(elaboracion)  # Procesar la elaboración
+                                break  # Si no hay errores, salir del bucle
+                            except ValueError as e:
+                                print(e)  # Mostrar el error
+                                print("Por favor, selecciona otro producto.")
+                        else:
+                            print("No se ha seleccionado ninguna elaboración.")
+                            break  # Salir del bucle si no se selecciona una elaboración válida
                 else:
                     print("Primero debes cargar un archivo en la opción 1")
             case 3:

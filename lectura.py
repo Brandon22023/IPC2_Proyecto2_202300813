@@ -58,9 +58,9 @@ class ProcesadorElaboracion:
 
      # Método para procesar la elaboración de un producto sin usar listas, ni índices ni len()
     def procesar_elaboracion(self, elaboracion):
-        # Reiniciar la lista de instrucciones al comenzar a procesar
+        # PARA REINICIAR LOS VALORES PARA QUE NO HAYA NADA CUANDO SE VUELVA A USAR
         self.lista_instrucciones = ListaDoblementeEnlazada()
-        # Inicializamos un puntero para recorrer la cadena
+        # SE INICIA CON UN PUNTERO PARA IR BUSCANDO LO QUE SE NECESITA
         puntero = iter(elaboracion)
 
         try:
@@ -69,9 +69,12 @@ class ProcesadorElaboracion:
                 caracter = next(puntero)
                 if caracter == "L":  # Detectamos el inicio de una línea "L"
                     linea = int(next(puntero))  # Obtener el número de la línea
+                    # Verificar si el número de la línea es 0
+                    if linea == 0:
+                        raise ValueError(f"Error: Línea no puede ser 0. Encontrado en L{linea}.")
+                        #el raise crea una excepcion para determinar si llego un dato inesperado
                     next(puntero)  # Saltar el caracter "C"
                     numero = ""  # Inicializamos la variable para almacenar el componente
-
                     # Leer el componente
                     while True:
                         siguiente = next(puntero)  # Obtener el siguiente carácter
@@ -84,6 +87,10 @@ class ProcesadorElaboracion:
                     # Convertir a entero si hay un número acumulado
                     if numero:  # Si hay un número acumulado
                         componente = int(numero)
+                        # Verificar si el componente es 0
+                        if componente == 0:
+                            raise ValueError(f"Error: Componente no puede ser 0. Encontrado en C{componente}.")
+                            #el raise crea una excepcion para determinar si llego un dato inesperado
                         # Agregar la instrucción correspondiente a la lista doblemente enlazada
                         self.lista_instrucciones.agregar(linea, componente)
 
@@ -96,6 +103,11 @@ class ProcesadorElaboracion:
                         componente = int(numero)
                         self.lista_instrucciones.agregar(linea, componente)
                         self.lista_instrucciones.buscar_componente(componente)
+        except ValueError as e:
+            # Capturamos la excepción para manejar el error sin detener el programa
+            print(e)
+            print("Por favor, selecciona otro producto.")
+            return False  # Retornamos False para indicar que hubo un error
 
         except StopIteration:
             # Manejar el final del iterador
@@ -106,6 +118,7 @@ class ProcesadorElaboracion:
             pass  # Fin del iterador
          # Generar las instrucciones basadas en los componentes procesados
         self.generar_instrucciones()
+        return True  # Retornamos True si todo salió bien
     
 
     def generar_instrucciones(self):
