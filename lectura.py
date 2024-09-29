@@ -103,49 +103,6 @@ class ProcesadorElaboracion:
                 self.lista_instrucciones.agregar(linea, componente)
                 self.lista_instrucciones.buscar_componente(componente)
             pass  # Fin del iterador
-        
-        # try:
-        #     while True:
-        #         # Buscamos un caracter "L" que indica una línea
-        #         caracter = next(puntero)
-        #         if caracter == "L":  # Detectamos el inicio de una línea "L"
-        #             linea = int(next(puntero))  # Obtener el número de la línea
-        #             next(puntero)  # Saltar el caracter "C"
-
-        #             # Leer componentes
-        #             while True:
-        #                 try:
-        #                     siguiente = next(puntero)
-        #                     if siguiente.isdigit():  # Comprobar si es un dígito
-        #                         # Leer el número completo (puede ser más de un dígito)
-        #                         numero = siguiente
-        #                         while True:
-        #                             siguiente = next(puntero)
-        #                             if siguiente.isdigit():
-        #                                 numero += siguiente  # Concatenar dígitos
-        #                             else:
-        #                                 break  # Salir si no es un dígito
-        #                         componente = int(numero)  # Convertir a entero
-
-        #                         # Agregar la instrucción correspondiente a la lista doblemente enlazada
-        #                         self.lista_instrucciones.agregar(linea, componente)
-
-        #                         # Llamar a buscar_componente en el contexto adecuado
-        #                         self.lista_instrucciones.buscar_componente(componente)
-        #                     else:
-        #                         break  # Salir si no es un dígito
-        #                 except StopIteration:
-        #                     break  # Fin del iterador
-
-        #             # Saltar el espacio o separador (si existe)
-        #             try:
-        #                 next(puntero)
-        #             except StopIteration:
-        #                 break  # Fin de la cadena
-        # except StopIteration:
-        #     pass  # Fin del iterador
-
-        # Generar las instrucciones basadas en los componentes procesados
         self.generar_instrucciones()
 
     # Método para generar las instrucciones finales
