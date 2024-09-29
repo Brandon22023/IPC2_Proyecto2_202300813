@@ -9,7 +9,7 @@
             <Producto>
                 <nombre> tv samsung </nombre>
                 <elaboracion>
-                    L2C5 L1C6   L2C12 L3C4      L3C10
+                    L2C5 L1C6 L2C12 L3C4 L3C10
                 </elaboracion>
             </Producto>
             <Producto>
@@ -67,7 +67,7 @@
             <Producto>
                 <nombre>Reloj juguete</nombre>
                 <elaboracion>
-                L1C2 L4C1 L3C3 L5C0 L2C2
+                L1C2 L4C1 L3C3 L5C1 L2C2
                 </elaboracion>
             </Producto>
         </ListadoProductos>
