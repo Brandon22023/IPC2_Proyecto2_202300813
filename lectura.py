@@ -12,7 +12,6 @@ class ListaDoblementeEnlazada:
         self.primero = None
         self.ultimo = None
 
-    # Método para agregar un nodo con una línea y un componente
     def agregar(self, linea, componente):
         nuevo_nodo = Nodo2(linea, componente)
         if self.primero is None:
@@ -23,7 +22,6 @@ class ListaDoblementeEnlazada:
             nuevo_nodo.anterior = self.ultimo
             self.ultimo = nuevo_nodo
 
-    # Método para buscar el último componente de una línea específica
     def buscar_ultimo_componente(self, linea):
         actual = self.primero
         ultimo_componente = 0
@@ -33,7 +31,6 @@ class ListaDoblementeEnlazada:
             actual = actual.siguiente
         return ultimo_componente
 
-    # Método para imprimir las instrucciones
     def imprimir(self):
         actual = self.primero
         while actual is not None:
@@ -56,8 +53,7 @@ class ProcesadorElaboracion:
     def __init__(self):
         self.lista_instrucciones = ListaDoblementeEnlazada()
 
-    # Método para procesar la elaboración de un producto sin usar listas, ni índices ni len()
-    # Método para procesar la elaboración de un producto sin usar listas, ni índices ni len()
+     # Método para procesar la elaboración de un producto sin usar listas, ni índices ni len()
     def procesar_elaboracion(self, elaboracion):
         # Inicializamos un puntero para recorrer la cadena
         puntero = iter(elaboracion)
@@ -103,44 +99,93 @@ class ProcesadorElaboracion:
                 self.lista_instrucciones.agregar(linea, componente)
                 self.lista_instrucciones.buscar_componente(componente)
             pass  # Fin del iterador
+         # Generar las instrucciones basadas en los componentes procesados
         self.generar_instrucciones()
+    
 
-    # Método para generar las instrucciones finales
     def generar_instrucciones(self):
         # Buscar el componente máximo entre todas las líneas
         max_componente_global = 0
         actual = self.lista_instrucciones.primero
         max_linea = 0
 
+        # Inicializamos una lista doblemente enlazada para almacenar el máximo por línea
+        max_por_linea = ListaDoblementeEnlazada()
+
+        # Primer recorrido: obtenemos los máximos componentes por cada línea
         while actual is not None:
+            # Actualizamos el máximo componente global si es necesario
             if actual.componente > max_componente_global:
                 max_componente_global = actual.componente
+
+            # Actualizamos el máximo número de línea
             if actual.linea > max_linea:
                 max_linea = actual.linea
+
+            # Buscamos si ya existe un nodo para esta línea en la lista de máximos por línea
+            nodo_max_linea = max_por_linea.primero
+            linea_encontrada = False
+            while nodo_max_linea is not None:
+                if nodo_max_linea.linea == actual.linea:
+                    # Actualizamos el componente si es mayor
+                    if actual.componente > nodo_max_linea.componente:
+                        nodo_max_linea.componente = actual.componente
+                    linea_encontrada = True
+                    break
+                nodo_max_linea = nodo_max_linea.siguiente
+
+            # Si no encontramos la línea en la lista, la agregamos con el componente actual
+            if not linea_encontrada:
+                max_por_linea.agregar(actual.linea, actual.componente)
+
             actual = actual.siguiente
 
-        # Imprimir las instrucciones para cada línea, asegurándose de no duplicar
-        actual = self.lista_instrucciones.primero
-        lineas_imprimidas = set()  # Para evitar que una línea se repita
-        while actual is not None:
-            if actual.linea not in lineas_imprimidas:
-                # Marcar la línea como ya impresa
-                lineas_imprimidas.add(actual.linea)
+        # Segundo recorrido: generar las instrucciones basadas en los máximos por línea
+        actual_max = max_por_linea.primero  # Reiniciar el puntero para la lista de máximos por línea
 
-                # Imprimir los componentes desde el 1 hasta el máximo global para cada línea
-                for i in range(1, max_componente_global + 1):
-                    if i <= actual.componente:  # Si el componente actual no ha alcanzado el máximo
-                        print(f"L{actual.linea}C{i} = Mover brazo componente {i}")
-                    else:
-                        print(f"L{actual.linea}C{i} = No hacer nada")
+        while actual_max is not None:
+            linea_actual = actual_max.linea
+            max_componente_actual = actual_max.componente
 
-            actual = actual.siguiente
+            # Imprimir las instrucciones hasta el componente máximo de esta línea
+            for i in range(1, max_componente_actual + 1):
+                # Verificar si el componente está en la lista de instrucciones
+                componente_en_lista = self.lista_instrucciones.primero
+                ensamblaje_realizado = False  # Seguimiento del ensamblaje en la línea actual
 
-        # Imprimir las líneas que no tenían componentes en la entrada original (si las hubiera)
+                while componente_en_lista is not None:
+                    if componente_en_lista.componente == i and componente_en_lista.linea == linea_actual:
+                        print(f"L{linea_actual}C{i} = ensamblaje")
+                        ensamblaje_realizado = True  # Ensamblaje realizado
+                        break
+                    componente_en_lista = componente_en_lista.siguiente
+                
+                if not ensamblaje_realizado:
+                    # Si el ensamblaje no se realizó en este componente, movemos el brazo
+                    print(f"L{linea_actual}C{i} = Mover brazo componente {i}")
+
+            # Instrucciones para componentes que no están en la lista de instrucciones
+            for i in range(max_componente_actual + 1, max_componente_global + 1):
+                print(f"L{linea_actual}C{i} = No hacer nada")
+
+            actual_max = actual_max.siguiente  # Avanzar al siguiente máximo por línea
+
+        # Imprimir líneas que no tenían componentes en la entrada original (si las hubiera)
         for linea in range(1, max_linea + 1):
-            if linea not in lineas_imprimidas:
+            # Verificar si esta línea ya fue impresa
+            existe_linea = False
+            puntero_lineas = max_por_linea.primero
+            while puntero_lineas is not None:
+                if puntero_lineas.linea == linea:
+                    existe_linea = True
+                    break
+                puntero_lineas = puntero_lineas.siguiente
+
+            if not existe_linea:  # Si la línea no fue impresa
                 for i in range(1, max_componente_global + 1):
                     print(f"L{linea}C{i} = No hacer nada")
+
+
 class Producto:
     """Clase para representar un producto."""
     def __init__(self, nombre_producto, elaboracion):
