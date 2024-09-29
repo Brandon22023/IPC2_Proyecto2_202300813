@@ -48,6 +48,9 @@ class ListaDoblementeEnlazada:
 
         if not encontrado:
             print(f"No se encontró el componente {componente}.")
+    def limpiar(self):
+        self.primero = None
+        self.ultimo = None
 
 class ProcesadorElaboracion:
     def __init__(self):
@@ -55,6 +58,8 @@ class ProcesadorElaboracion:
 
      # Método para procesar la elaboración de un producto sin usar listas, ni índices ni len()
     def procesar_elaboracion(self, elaboracion):
+        # Reiniciar la lista de instrucciones al comenzar a procesar
+        self.lista_instrucciones = ListaDoblementeEnlazada()
         # Inicializamos un puntero para recorrer la cadena
         puntero = iter(elaboracion)
 
@@ -104,7 +109,7 @@ class ProcesadorElaboracion:
     
 
     def generar_instrucciones(self):
-        # Buscar el componente máximo entre todas las líneas
+        # Reiniciar los valores al inicio de la función
         max_componente_global = 0
         actual = self.lista_instrucciones.primero
         max_linea = 0
