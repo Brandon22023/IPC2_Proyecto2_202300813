@@ -57,10 +57,11 @@ class ProcesadorElaboracion:
         self.lista_instrucciones = ListaDoblementeEnlazada()
 
     # Método para procesar la elaboración de un producto sin usar listas, ni índices ni len()
+    # Método para procesar la elaboración de un producto sin usar listas, ni índices ni len()
     def procesar_elaboracion(self, elaboracion):
         # Inicializamos un puntero para recorrer la cadena
         puntero = iter(elaboracion)
-        
+
         try:
             while True:
                 # Buscamos un caracter "L" que indica una línea
@@ -68,21 +69,81 @@ class ProcesadorElaboracion:
                 if caracter == "L":  # Detectamos el inicio de una línea "L"
                     linea = int(next(puntero))  # Obtener el número de la línea
                     next(puntero)  # Saltar el caracter "C"
-                    componente = int(next(puntero))  # Obtener el número del componente
+                    numero = ""  # Inicializamos la variable para almacenar el componente
 
-                    # Agregar la instrucción correspondiente a la lista doblemente enlazada
-                    self.lista_instrucciones.agregar(linea, componente)
+                    # Leer el componente
+                    while True:
+                        siguiente = next(puntero)  # Obtener el siguiente carácter
+                        if siguiente.isdigit():  # Comprobar si es un dígito
+                            numero += siguiente  # Concatenar dígitos
+                        else:
+                            # Si no es un dígito, salir del bucle
+                            break
 
-                    # Llamar a buscar_componente en el contexto adecuado
-                    self.lista_instrucciones.buscar_componente(componente)
+                    # Convertir a entero si hay un número acumulado
+                    if numero:  # Si hay un número acumulado
+                        componente = int(numero)
+                        # Agregar la instrucción correspondiente a la lista doblemente enlazada
+                        self.lista_instrucciones.agregar(linea, componente)
 
-                    # Saltar el espacio o separador (si existe)
-                    try:
-                        next(puntero)
-                    except StopIteration:
-                        break  # Fin de la cadena
+                        # Llamar a buscar_componente en el contexto adecuado
+                        self.lista_instrucciones.buscar_componente(componente)
+
+                # Al final de la cadena, manejar el último componente si es necesario
+                if siguiente is None:
+                    if numero:  # Verificar si hay un número acumulado
+                        componente = int(numero)
+                        self.lista_instrucciones.agregar(linea, componente)
+                        self.lista_instrucciones.buscar_componente(componente)
+
         except StopIteration:
+            # Manejar el final del iterador
+            if numero:  # Verificar si hay un número acumulado al final
+                componente = int(numero)
+                self.lista_instrucciones.agregar(linea, componente)
+                self.lista_instrucciones.buscar_componente(componente)
             pass  # Fin del iterador
+        
+        # try:
+        #     while True:
+        #         # Buscamos un caracter "L" que indica una línea
+        #         caracter = next(puntero)
+        #         if caracter == "L":  # Detectamos el inicio de una línea "L"
+        #             linea = int(next(puntero))  # Obtener el número de la línea
+        #             next(puntero)  # Saltar el caracter "C"
+
+        #             # Leer componentes
+        #             while True:
+        #                 try:
+        #                     siguiente = next(puntero)
+        #                     if siguiente.isdigit():  # Comprobar si es un dígito
+        #                         # Leer el número completo (puede ser más de un dígito)
+        #                         numero = siguiente
+        #                         while True:
+        #                             siguiente = next(puntero)
+        #                             if siguiente.isdigit():
+        #                                 numero += siguiente  # Concatenar dígitos
+        #                             else:
+        #                                 break  # Salir si no es un dígito
+        #                         componente = int(numero)  # Convertir a entero
+
+        #                         # Agregar la instrucción correspondiente a la lista doblemente enlazada
+        #                         self.lista_instrucciones.agregar(linea, componente)
+
+        #                         # Llamar a buscar_componente en el contexto adecuado
+        #                         self.lista_instrucciones.buscar_componente(componente)
+        #                     else:
+        #                         break  # Salir si no es un dígito
+        #                 except StopIteration:
+        #                     break  # Fin del iterador
+
+        #             # Saltar el espacio o separador (si existe)
+        #             try:
+        #                 next(puntero)
+        #             except StopIteration:
+        #                 break  # Fin de la cadena
+        # except StopIteration:
+        #     pass  # Fin del iterador
 
         # Generar las instrucciones basadas en los componentes procesados
         self.generar_instrucciones()
