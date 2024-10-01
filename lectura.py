@@ -113,6 +113,11 @@ class ProcesadorElaboracion:
             # Manejar el final del iterador
             if numero:  # Verificar si hay un número acumulado al final
                 componente = int(numero)
+                # Verificar si el componente es 0
+                if componente == 0:
+                    raise ValueError(f"Error: Componente no puede ser 0. Encontrado en C{componente}.")
+                    #el raise crea una excepcion para determinar si llego un dato inesperado
+                
                 self.lista_instrucciones.agregar(linea, componente)
                 self.lista_instrucciones.buscar_componente(componente)
             pass  # Fin del iterador
