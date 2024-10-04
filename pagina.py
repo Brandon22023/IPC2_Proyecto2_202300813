@@ -1,9 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
 import xml.etree.ElementTree as ET
-
 app = Flask(__name__)
 app.secret_key = 'clave_secreta_para_flash'  # Clave para usar los mensajes flash
-
 # Clases para manejar las colas de máquinas y productos
 class Nodo_PARA_MAQUINAS:
     def __init__(self, data):
@@ -134,6 +132,12 @@ class ListaEnlazada:
             print(actual.data)
             actual = actual.siguiente
 
+    def __iter__(self):
+        actual = self.cabeza
+        while actual:
+            yield actual.data
+            actual = actual.siguiente
+
 # Clase para manejar la lectura de XML
 class LecturaXML:
     def __init__(self):
@@ -184,32 +188,6 @@ class LecturaXML:
                 actual_producto = actual_producto.siguiente
             actual = actual.siguiente
 
-    def seleccionar_maquina(self):
-        cola_maquinas = Cola_MAQUINAS()
-        actual_maquina = self.lista_maquinas.cabeza
-
-        if actual_maquina is None:
-            print("No hay máquinas cargadas.")
-            return
-
-        while actual_maquina:
-            cola_maquinas.encolar(actual_maquina.data)
-            actual_maquina = actual_maquina.siguiente
-
-        maquina_seleccionada = cola_maquinas.desencolar()  # Selecciona la primera máquina
-        return self.mostrar_productos(maquina_seleccionada)
-
-    def mostrar_productos(self, maquina):
-        cola_productos = Cola_PRODUCTOS()
-        actual_producto = maquina.productos.cabeza
-        if actual_producto is None:
-            print(f"La máquina {maquina.nombre_maquina} no tiene productos.")
-            return
-        while actual_producto:
-            cola_productos.encolar(actual_producto.data)
-            actual_producto = actual_producto.siguiente
-        producto_seleccionado = cola_productos.desencolar()  # Selecciona el primer producto
-        return producto_seleccionado.elaboracion  # Devuelve la elaboración del producto
 
 # Función para verificar el tipo de archivo
 def allowed_file(filename):
@@ -225,41 +203,39 @@ cola_productos = Cola_PRODUCTOS()
 @app.route('/tab1', methods=['GET', 'POST']) 
 def tab1():
     lectura = LecturaXML()  # Instancia para manejar la lectura del XML
-    elaboracion_producto = None
+    elaboracion_producto = None  # Para almacenar la elaboración del producto seleccionado
+    productos_de_maquina = None   # Para almacenar la referencia a la lista de productos de la máquina seleccionada
 
     if request.method == 'POST':
-        if 'file' not in request.files:
-            flash('No se seleccionó ningún archivo', 'error')
-            return redirect(request.url)
-        file = request.files['file']
-        if file.filename == '':
-            flash('No se seleccionó ningún archivo', 'error')
-            return redirect(request.url)
-        if file and allowed_file(file.filename):
-            try:
-                if cola_maquinas.esta_vacia():
+        # Manejo del archivo
+        if 'file' in request.files:
+            file = request.files['file']
+            if file.filename == '':
+                flash('No se seleccionó ningún archivo', 'error')
+                return redirect(request.url)
+            if file and allowed_file(file.filename):
+                try:
                     lectura.cargar_archivo(file)  # Carga el archivo XML
                     actual_maquina = lectura.lista_maquinas.cabeza
                     while actual_maquina:
                         cola_maquinas.encolar(actual_maquina.data)  # Agregar a la cola
                         actual_maquina = actual_maquina.siguiente
                     flash('Archivo cargado exitosamente', 'success')
-                else:
-                    flash('Las colas ya están cargadas', 'info')
-            except Exception as e:
-                flash(f'Ocurrió un error al procesar el archivo: {e}', 'error')
-
-        # Manejar la selección de máquina
-        selected_maquina = request.form.get('maquina')  # Obtener la máquina seleccionada
-        if selected_maquina:
-            # Buscar la máquina en la cola
-            actual_maquina = cola_maquinas.primero
-            while actual_maquina:
-                if actual_maquina.data.nombre_maquina == selected_maquina:
-                    # Mostrar productos de la máquina seleccionada
-                    elaboracion_producto = lectura.mostrar_productos(actual_maquina.data)  # Obtener la elaboración del primer producto
-                    break
-                actual_maquina = actual_maquina.siguiente
+                except Exception as e:
+                    flash(f'Ocurrió un error al procesar el archivo: {e}', 'error')
+        else:
+            # Manejar la selección de máquina solo si el archivo ya fue cargado
+            selected_maquina = request.form.get('maquina')  # Obtener la máquina seleccionada
+            if selected_maquina:
+                # Buscar la máquina en la cola
+                actual_maquina = cola_maquinas.primero
+                while actual_maquina:
+                    if actual_maquina.data.nombre_maquina == selected_maquina:
+                        # Acceder a la lista de productos de la máquina seleccionada
+                        productos_de_maquina = actual_maquina.data.productos
+                        elaboracion_producto = productos_de_maquina.cabeza.data.elaboracion if productos_de_maquina.cabeza else None
+                        break
+                    actual_maquina = actual_maquina.siguiente
 
     # Obtener todas las máquinas disponibles para el combobox
     cola_maquinas_temp = Cola_MAQUINAS()  # Crear una cola temporal
@@ -268,7 +244,7 @@ def tab1():
         cola_maquinas_temp.encolar(actual_maquina.data)  # Usamos la cola para obtener los nombres
         actual_maquina = actual_maquina.siguiente
 
-    return render_template('pagina.html', tab='Tab1', cola_maquinas=cola_maquinas_temp, elaboracion=elaboracion_producto)
+    return render_template('pagina.html', tab='Tab1', cola_maquinas=cola_maquinas_temp, elaboracion=elaboracion_producto, productos=productos_de_maquina)
 @app.route('/tab2')
 def tab2():
     return render_template('pagina.html', tab='Tab2')

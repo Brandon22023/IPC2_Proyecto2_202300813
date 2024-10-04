@@ -105,23 +105,25 @@
 
         <h2>Máquinas</h2>
         <!-- Formulario para seleccionar máquina -->
-        <form method="POST">
-          <label for="maquina">Seleccione una máquina:</label>
-          <select name="maquina" id="maquina">
-            {% if cola_maquinas %}
+        <form method="post">
+          <select name="maquina" onchange="this.form.submit()">
+              <option value="">Selecciona una máquina</option>
               {% for maquina in cola_maquinas %}
-                <option value="{{ maquina.nombre_maquina }}">{{ maquina.nombre_maquina }}</option>
+              <option value="{{ maquina.nombre_maquina }}">{{ maquina.nombre_maquina }}</option>
               {% endfor %}
-            {% else %}
-              <option value="">No hay máquinas disponibles</option>
-            {% endif %}
           </select>
-          <button type="submit">Mostrar productos</button>
+          <button type="submit">Mostrar Productos</button>
         </form>
 
-        {% if elaboracion %}
-          <h3>Elaboración del producto seleccionado:</h3>
-          <p>{{ elaboracion }}</p>
+        {% if productos %}
+            <h3>Productos de la máquina seleccionada:</h3>
+            <ul>
+                {% for producto in productos %}
+                    <li>{{ producto.nombre_producto }}: {{ producto.elaboracion }}</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No hay productos disponibles para esta máquina.</p>
         {% endif %}
     
 
