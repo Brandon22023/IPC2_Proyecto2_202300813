@@ -91,8 +91,7 @@
          <!-- Formulario para cargar el archivo -->
          <form method="POST" enctype="multipart/form-data" action="{{ url_for('tab1') }}">
           <label for="file" class="custom-file-upload">Seleccionar archivo</label>
-          <input type="file" name="file" id="file" style="display: none;" onchange="this.form.submit();">
-          <input type="submit" value="Cargar archivo" style="display: none;">
+          <input type="file" name="file" id="file" onchange="this.form.submit();">
          </form>
 
          <!-- Mostrar mensajes de Flask -->
@@ -106,30 +105,24 @@
 
         <h2>Máquinas</h2>
         <!-- Formulario para seleccionar máquina -->
-        <form method="POST" action="{{ url_for('tab1') }}">
-            <select name="maquina_id">
-                {% for maquina in cola_maquinas %}
-                    <option value="{{ loop.index0 }}">{{ maquina.nombre_maquina }}</option>
-                {% endfor %}
-            </select>
-            <input type="submit" value="Seleccionar Máquina">
+        <form method="POST">
+          <label for="maquina">Seleccione una máquina:</label>
+          <select name="maquina" id="maquina">
+            {% if cola_maquinas %}
+              {% for maquina in cola_maquinas %}
+                <option value="{{ maquina.nombre_maquina }}">{{ maquina.nombre_maquina }}</option>
+              {% endfor %}
+            {% else %}
+              <option value="">No hay máquinas disponibles</option>
+            {% endif %}
+          </select>
+          <button type="submit">Mostrar productos</button>
         </form>
 
-        <h2>Productos</h2>
-        <!-- Mostrar productos relacionados, si es necesario -->
-        <ul>
-            {% for producto in cola_productos %}
-                <li>{{ producto.nombre_producto }}</li>  <!-- Asegúrate de que 'nombre_producto' sea un atributo válido -->
-            {% endfor %}
-        </ul>
-
-        
-
-          <!-- Mostrar la elaboración del producto seleccionado -->
-          {% if elaboracion %}
-            <h3>Elaboración del Producto</h3>
-            <p>{{ elaboracion }}</p>
-          {% endif %}
+        {% if elaboracion %}
+          <h3>Elaboración del producto seleccionado:</h3>
+          <p>{{ elaboracion }}</p>
+        {% endif %}
     
 
 
