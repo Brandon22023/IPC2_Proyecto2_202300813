@@ -54,10 +54,27 @@
       .custom-file-upload:hover {
         background-color: #0056b3;
       }
+      /* Estilos para mensajes flash */
+      .flash-success {
+        background-color: #d4edda;
+        color: #155724;
+        padding: 15px;
+        margin-bottom: 15px;
+        border: 1px solid #c3e6cb;
+        border-radius: 4px;
+      }
+      .flash-error {
+        background-color: #f8d7da;
+        color: #721c24;
+        padding: 15px;
+        margin-bottom: 15px;
+        border: 1px solid #f5c6cb;
+        border-radius: 4px;
+      }
     </style>
   </head>
   <body>
-    <h1>Página donde todo dará inicio</h1>
+    <h1>Proyecto2_IPC2</h1>
 
     <!-- Pestañas -->
     <div class="tab">
@@ -69,14 +86,53 @@
     <!-- Contenido de las pestañas -->
     <div class="tabcontent">
       {% if tab == 'Tab1' %}
-        <h2>Contenido de la Pestaña 1</h2>
-        <p>Este es el contenido de la primera pestaña.</p>
+        <h2>Por favor seleccione el archivo</h2>
+        <p></p>
          <!-- Formulario para cargar el archivo -->
          <form method="POST" enctype="multipart/form-data" action="{{ url_for('tab1') }}">
           <label for="file" class="custom-file-upload">Seleccionar archivo</label>
           <input type="file" name="file" id="file" style="display: none;" onchange="this.form.submit();">
           <input type="submit" value="Cargar archivo" style="display: none;">
          </form>
+
+         <!-- Mostrar mensajes de Flask -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <h2>Máquinas</h2>
+        <!-- Formulario para seleccionar máquina -->
+        <form method="POST" action="{{ url_for('tab1') }}">
+            <select name="maquina_id">
+                {% for maquina in cola_maquinas %}
+                    <option value="{{ loop.index0 }}">{{ maquina.nombre_maquina }}</option>
+                {% endfor %}
+            </select>
+            <input type="submit" value="Seleccionar Máquina">
+        </form>
+
+        <h2>Productos</h2>
+        <!-- Mostrar productos relacionados, si es necesario -->
+        <ul>
+            {% for producto in cola_productos %}
+                <li>{{ producto.nombre_producto }}</li>  <!-- Asegúrate de que 'nombre_producto' sea un atributo válido -->
+            {% endfor %}
+        </ul>
+
+        
+
+          <!-- Mostrar la elaboración del producto seleccionado -->
+          {% if elaboracion %}
+            <h3>Elaboración del Producto</h3>
+            <p>{{ elaboracion }}</p>
+          {% endif %}
+    
+
+
       {% elif tab == 'Tab2' %}
         <h2>REPORTE DEL HTML</h2>
         <p>usar tabla de resultados</p>
@@ -94,4 +150,3 @@
     </div>
   </body>
 </html>
-
