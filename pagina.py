@@ -199,13 +199,21 @@ def home():
 
 cola_maquinas = Cola_MAQUINAS()
 cola_productos = Cola_PRODUCTOS()
-
+def obtener_maquinas(cola_maquinas):
+    # Crear una nueva cola temporal que contendrá las mismas máquinas
+    cola_maquinas_temp = Cola_MAQUINAS()
+    actual_maquina = cola_maquinas.primero
+    while actual_maquina:
+        # Encolar cada máquina a la cola temporal
+        cola_maquinas_temp.encolar(actual_maquina.data)
+        actual_maquina = actual_maquina.siguiente
+    return cola_maquinas_temp
 @app.route('/tab1', methods=['GET', 'POST']) 
 def tab1():
     lectura = LecturaXML()  # Instancia para manejar la lectura del XML
 
     if request.method == 'POST':
-        # Manejo del archivo
+        # Manejo del archivo XML cargado
         if 'file' in request.files:
             file = request.files['file']
             if file.filename == '':
@@ -213,24 +221,19 @@ def tab1():
                 return redirect(request.url)
             if file and allowed_file(file.filename):
                 try:
-                    lectura.cargar_archivo(file)  # Carga el archivo XML
+                    lectura.cargar_archivo(file)  # Cargar el archivo XML
                     actual_maquina = lectura.lista_maquinas.cabeza
                     while actual_maquina:
-                        cola_maquinas.encolar(actual_maquina.data)  # Agregar a la cola
+                        cola_maquinas.encolar(actual_maquina.data)  # Agregar máquinas a la cola
                         actual_maquina = actual_maquina.siguiente
                     flash('Archivo cargado exitosamente', 'success')
                 except Exception as e:
                     flash(f'Ocurrió un error al procesar el archivo: {e}', 'error')
         else:
-            # El flujo de selección de productos se maneja en la ruta /productos
             pass
 
-    # Obtener todas las máquinas disponibles para el combobox
-    cola_maquinas_temp = Cola_MAQUINAS()  # Crear una cola temporal
-    actual_maquina = cola_maquinas.primero
-    while actual_maquina:
-        cola_maquinas_temp.encolar(actual_maquina.data)  # Usamos la cola para obtener los nombres
-        actual_maquina = actual_maquina.siguiente
+    # Usamos la nueva función para obtener la cola temporal de máquinas
+    cola_maquinas_temp = obtener_maquinas(cola_maquinas)
 
     return render_template('pagina.html', tab='Tab1', cola_maquinas=cola_maquinas_temp)
 
@@ -240,16 +243,15 @@ def cargar_productos():
     productos_de_maquina = None
 
     if selected_maquina:
-        # Buscar la máquina en la cola
+        # Buscar la máquina seleccionada en la cola
         actual_maquina = cola_maquinas.primero
         while actual_maquina:
             if actual_maquina.data.nombre_maquina == selected_maquina:
-                # Acceder a la lista de productos de la máquina seleccionada
                 productos_de_maquina = actual_maquina.data.productos
                 break
             actual_maquina = actual_maquina.siguiente
 
-    # Pasamos los productos de la máquina seleccionada al frontend
+    # Pasar los productos al template
     return render_template('pagina.html', tab='Tab1', productos=productos_de_maquina, maquina_seleccionada=selected_maquina)
 @app.route('/tab2')
 def tab2():
