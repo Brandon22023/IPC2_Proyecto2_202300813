@@ -104,27 +104,31 @@
         {% endwith %}
 
         <h2>Máquinas</h2>
-        <!-- Formulario para seleccionar máquina -->
-        <form method="post">
-          <select name="maquina" onchange="this.form.submit()">
-              <option value="">Selecciona una máquina</option>
-              {% for maquina in cola_maquinas %}
-              <option value="{{ maquina.nombre_maquina }}">{{ maquina.nombre_maquina }}</option>
-              {% endfor %}
-          </select>
-          <button type="submit">Mostrar Productos</button>
-        </form>
-
-        {% if productos %}
-            <h3>Productos de la máquina seleccionada:</h3>
-            <ul>
-                {% for producto in productos %}
-                    <li>{{ producto.nombre_producto }}: {{ producto.elaboracion }}</li>
+        <form method="POST" action="{{ url_for('tab1') }}" enctype="multipart/form-data">
+            <!-- Combobox de máquinas -->
+            <label for="maquina">Selecciona una máquina:</label>
+            <select name="maquina" id="maquina">
+                <option value="">Seleccione una máquina</option>
+                {% for maquina in cola_maquinas %}
+                    <option value="{{ maquina.nombre_maquina }}" {% if maquina.nombre_maquina == maquina_seleccionada %}selected{% endif %}>
+                        {{ maquina.nombre_maquina }}
+                    </option>
                 {% endfor %}
-            </ul>
-        {% else %}
-            <p>No hay productos disponibles para esta máquina.</p>
-        {% endif %}
+            </select>
+            
+            <!-- Botón para cargar los productos de la máquina seleccionada -->
+            <button type="submit" formaction="{{ url_for('cargar_productos') }}">Cargar productos</button>
+        
+            <!-- Combobox de productos de la máquina seleccionada -->
+            {% if productos %}
+                <label for="producto">Selecciona un producto:</label>
+                <select name="producto" id="producto">
+                    {% for producto in productos %}
+                        <option value="{{ producto.nombre_producto }}">{{ producto.nombre_producto }}</option>
+                    {% endfor %}
+                </select>
+            {% endif %}
+        </form>
     
 
 

@@ -203,8 +203,6 @@ cola_productos = Cola_PRODUCTOS()
 @app.route('/tab1', methods=['GET', 'POST']) 
 def tab1():
     lectura = LecturaXML()  # Instancia para manejar la lectura del XML
-    elaboracion_producto = None  # Para almacenar la elaboración del producto seleccionado
-    productos_de_maquina = None   # Para almacenar la referencia a la lista de productos de la máquina seleccionada
 
     if request.method == 'POST':
         # Manejo del archivo
@@ -224,18 +222,8 @@ def tab1():
                 except Exception as e:
                     flash(f'Ocurrió un error al procesar el archivo: {e}', 'error')
         else:
-            # Manejar la selección de máquina solo si el archivo ya fue cargado
-            selected_maquina = request.form.get('maquina')  # Obtener la máquina seleccionada
-            if selected_maquina:
-                # Buscar la máquina en la cola
-                actual_maquina = cola_maquinas.primero
-                while actual_maquina:
-                    if actual_maquina.data.nombre_maquina == selected_maquina:
-                        # Acceder a la lista de productos de la máquina seleccionada
-                        productos_de_maquina = actual_maquina.data.productos
-                        elaboracion_producto = productos_de_maquina.cabeza.data.elaboracion if productos_de_maquina.cabeza else None
-                        break
-                    actual_maquina = actual_maquina.siguiente
+            # El flujo de selección de productos se maneja en la ruta /productos
+            pass
 
     # Obtener todas las máquinas disponibles para el combobox
     cola_maquinas_temp = Cola_MAQUINAS()  # Crear una cola temporal
@@ -244,10 +232,30 @@ def tab1():
         cola_maquinas_temp.encolar(actual_maquina.data)  # Usamos la cola para obtener los nombres
         actual_maquina = actual_maquina.siguiente
 
-    return render_template('pagina.html', tab='Tab1', cola_maquinas=cola_maquinas_temp, elaboracion=elaboracion_producto, productos=productos_de_maquina)
+    return render_template('pagina.html', tab='Tab1', cola_maquinas=cola_maquinas_temp)
+
+@app.route('/productos', methods=['POST'])
+def cargar_productos():
+    selected_maquina = request.form.get('maquina')  # Obtener la máquina seleccionada del formulario
+    productos_de_maquina = None
+
+    if selected_maquina:
+        # Buscar la máquina en la cola
+        actual_maquina = cola_maquinas.primero
+        while actual_maquina:
+            if actual_maquina.data.nombre_maquina == selected_maquina:
+                # Acceder a la lista de productos de la máquina seleccionada
+                productos_de_maquina = actual_maquina.data.productos
+                break
+            actual_maquina = actual_maquina.siguiente
+
+    # Pasamos los productos de la máquina seleccionada al frontend
+    return render_template('pagina.html', tab='Tab1', productos=productos_de_maquina, maquina_seleccionada=selected_maquina)
 @app.route('/tab2')
 def tab2():
     return render_template('pagina.html', tab='Tab2')
+
+
 
 @app.route('/tab3')
 def tab3():
