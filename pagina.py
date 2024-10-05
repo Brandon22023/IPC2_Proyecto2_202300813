@@ -200,7 +200,49 @@ class ListaEnlazada:
         while actual:
             yield actual.data
             actual = actual.siguiente
+class Nodo_tabla:
+    def __init__(self, linea):
+        self.linea = linea
+        self.siguiente = None
 
+class ListaCircular_tabla:
+    def __init__(self):
+        self.primero = None
+
+    def agregar(self, linea):
+        nuevo_nodo = Nodo_tabla(linea)
+        if self.primero is None:
+            self.primero = nuevo_nodo
+            nuevo_nodo.siguiente = nuevo_nodo  # Enlazamos el nodo consigo mismo
+        else:
+            actual = self.primero
+            while actual.siguiente != self.primero:  # Buscamos el último nodo
+                actual = actual.siguiente
+            actual.siguiente = nuevo_nodo  # Enlazamos el nuevo nodo
+            nuevo_nodo.siguiente = self.primero  # Cerrar el ciclo
+
+    def tiene_lineas(self):
+        return self.primero is not None
+
+    def recorrer(self):
+        actual = self.primero
+        while True:
+            yield actual.linea  # Usar yield para iterar sobre las líneas
+            actual = actual.siguiente
+            if actual == self.primero:  # Vuelve al inicio
+                break
+    def contiene(self, linea):
+        if self.primero is None:
+            return False
+        
+        nodo_actual = self.primero
+        while True:
+            if nodo_actual.linea == linea:
+                return True
+            nodo_actual = nodo_actual.siguiente
+            if nodo_actual == self.primero:  # Vuelve al inicio
+                break
+        return False
 # Clase para manejar la lectura de XML
 class LecturaXML:
     def __init__(self):
@@ -306,16 +348,68 @@ class ListaCircularSimplementeEnlazada:
 
     def obtener_instrucciones(self):
         if self.primero is None:
-            return  # No hay instrucciones
+            return "<p>No hay instrucciones para mostrar</p>"
+
         actual = self.primero
-        instrucciones_str = ""  # Cadena para almacenar las instrucciones
+        lista_circular = ListaCircular_tabla()  # Crear la lista circular para almacenar las líneas válidas
+
+        # Agregar líneas válidas (1 a 15) a la lista circular
         while True:
-            instrucciones_str += f"{actual.bloque} {actual.linea} {actual.componente} {actual.instruccion}\n"
-            print(f"{actual.bloque} {actual.linea} {actual.componente} {actual.instruccion}")
+            if 1 <= actual.linea <= 15:
+                # Verificar si la línea ya está en la lista circular antes de agregar
+                if not lista_circular.contiene(actual.linea):  # Método para verificar si ya existe
+                    lista_circular.agregar(actual.linea)
+
             actual = actual.siguiente
+
             if actual == self.primero:  # Vuelve al inicio
                 break
-        return instrucciones_str
+
+        # Crear la tabla HTML
+        tabla_html = "<table border='1'>"
+        tabla_html += "<tr><th>Tiempo</th>"
+
+        # Generar los encabezados para las líneas de ensamblaje basadas en la lista circular
+        nodo_actual = lista_circular.primero
+        while True:
+            tabla_html += f"<th>Línea de Ensamblaje {nodo_actual.linea}</th>"
+            nodo_actual = nodo_actual.siguiente
+            if nodo_actual == lista_circular.primero:  # Vuelve al inicio de la lista circular
+                break
+        tabla_html += "</tr>"
+
+        # Inicializamos una variable para llevar el conteo del tiempo
+        contador_tiempo = 1
+
+        actual = self.primero
+        while True:
+            # Crear una nueva fila de la tabla para cada conjunto de instrucciones
+            tabla_html += "<tr>"
+            tabla_html += f"<td>{contador_tiempo}er. Segundo</td>"
+
+            # Colocar las instrucciones en las columnas dependiendo de las líneas válidas
+            nodo_actual = lista_circular.primero
+            while True:
+                if nodo_actual.linea == actual.linea:
+                    tabla_html += f"<td>{actual.instruccion} – Componente {actual.componente}</td>"
+                    break  # Salimos del bucle si hemos encontrado la línea correspondiente
+                else:
+                    tabla_html += "<td></td>"  # Dejar la celda vacía si no hay instrucción para esta línea
+
+                nodo_actual = nodo_actual.siguiente
+                if nodo_actual == lista_circular.primero:  # Vuelve al inicio de la lista circular
+                    break
+
+            tabla_html += "</tr>"
+
+            actual = actual.siguiente
+            contador_tiempo += 1  # Incrementamos el tiempo
+
+            if actual == self.primero:  # Vuelve al inicio
+                break
+
+        tabla_html += "</table>"
+        return tabla_html
 class Nodo2:
     def __init__(self, linea, componente):
         self.linea = linea  # Línea de ensamblaje
@@ -525,6 +619,7 @@ class ProcesadorElaboracion:
         actual = self.lista_instrucciones.primero  
 
         # Lista circular para almacenar las instrucciones
+        global instrucciones_lista 
         instrucciones_lista = ListaCircularSimplementeEnlazada()  # Usar lista circular
 
         while actual is not None:  
@@ -600,7 +695,6 @@ class ProcesadorElaboracion:
             html += "<tr><td colspan='4'>No hay instrucciones para mostrar</td></tr>\n"
             html += "</table>"
             return html
-
         actual = self.instrucciones_lista.primero  
         while True:
             # Extrae la información de cada nodo
@@ -710,7 +804,7 @@ def obtener_elaboracion_producto(producto_seleccionado):
     return None  # Devuelve None si no se encuentra el producto
 @app.route('/elaboracion', methods=['POST'])
 def mostrar_elaboracion():
-    selected_producto = request.form.get('producto')  # Obtener el producto seleccionado del formulario
+    selected_producto = request.form.get('producto')
     print("Producto seleccionado:", selected_producto)
     elaboracion = None
 
@@ -718,58 +812,39 @@ def mostrar_elaboracion():
         elaboracion = obtener_elaboracion_producto(selected_producto)
         print("Elaboración del producto:", elaboracion)
 
-        # Verificar si se obtuvo la elaboración
         if elaboracion is None:
             flash('No se encontró la elaboración para el producto seleccionado.', 'error')
-            return redirect(url_for('tab1'))  # Redirigir a la ruta donde se carga el formulario
+            return redirect(url_for('tab1'))
 
-        procesador = ProcesadorElaboracion()  # Crear una instancia para procesar la elaboración.
-        error = procesador.procesar_elaboracion(elaboracion)  # Procesar la elaboración.
+        procesador = ProcesadorElaboracion()
+        error = procesador.procesar_elaboracion(elaboracion)
 
         if error:
-            flash(error, 'error')  # Mostrar el error en la interfaz
-            return redirect(url_for('tab1'))  # Redirigir a la ruta donde se carga el formulario
+            flash(error, 'error')
+            return redirect(url_for('tab1'))
 
-        # Generar el gráfico de la elaboración
-        dot = graphviz.Digraph(comment='Elaboración del Producto', graph_attr={'rankdir': 'LR'})  # Orientación horizontal
+        # Generar el HTML de la tabla de instrucciones
+        html_tabla = procesador.generar_html_tabla()  # Guarda el HTML de la tabla
 
-        # Crear la lista circular para los bloques de elaboración
-        bloques = ListaCircular_L()
-
-        # Separar la cadena en bloques
-        partes = elaboracion.split(' ')
-
-        # Encolar cada parte en la lista circular
-        for parte in partes:
-            bloques.encolar(parte.strip())  # Agregar la parte sin espacios
-
-        # Crear nodos y aristas en el gráfico
-        if not bloques.esta_vacia():
-            bloque_actual = bloques.desencolar()  # Obtener el primer bloque
-            dot.node(bloque_actual, bloque_actual, style='filled', fillcolor='lightblue')  # Color del nodo
-
-            # Preparar contenido para archivo .org
-            org_content = "* Elaboración del Producto\n"
-
-            while not bloques.esta_vacia():
-                bloque_siguiente = bloques.desencolar()
-                dot.node(bloque_siguiente, bloque_siguiente, style='filled', fillcolor='lightgreen')  # Color del nodo
-                dot.edge(bloque_actual, bloque_siguiente)
-                org_content += f"** {bloque_actual}\n"  # Añadir nodo al contenido de .org
-                bloque_actual = bloque_siguiente
-
-            # Añadir el último bloque al contenido de .org
-            org_content += f"** {bloque_actual}\n"
-
-        # Renderizar la gráfica
-        dot.render('static/elaboracion_producto', format='png')  # Guardar en la carpeta static
-    # Pasar la información de elaboración al template
-    return render_template('pagina.html', tab='Tab1', producto=selected_producto, elaboracion=elaboracion)
-@app.route('/tab2')
+    return render_template('pagina.html', tab='Tab1', producto=selected_producto, elaboracion=elaboracion, html_tabla=html_tabla)
+@app.route('/tab2', methods=['GET', 'POST'])
 def tab2():
-    return render_template('pagina.html', tab='Tab2')
+    # Aquí deberías tener la lógica para generar la tabla
+    # Ejemplo:
+    tabla_html = ""  # Reemplaza esto con tu lógica para generar la tabla en HTML
 
+    # Suponiendo que tienes una función que devuelve la tabla
+    try:
+        # Aquí va tu lógica para obtener los datos y generar la tabla
+          # Reemplaza esto con tu lógica
+            tabla_html = "<table>"  # Inicia la tabla
+            tabla_html += "<tr><th>"+ instrucciones_lista.obtener_instrucciones()  # Encabezados de columna
+            tabla_html += "</table>"  # Cierra la tabla
+    except Exception as e:
+        
+        print(f"Error al obtener datos: {e}")
 
+    return render_template('pagina.html', tab='Tab2', tabla_html=tabla_html)
 @app.route('/tab3')
 def tab3():
     return render_template('pagina.html', tab='Tab3')

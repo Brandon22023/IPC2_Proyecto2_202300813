@@ -85,6 +85,61 @@
           border-radius: 5px;        /* Bordes redondeados */
           margin-top: 20px;          /* Espacio superior */
       }
+      
+      .form-container {
+          background: linear-gradient(to bottom, rgb(4, 63, 84), rgb(122, 188, 232));
+          border-radius: 8px;
+          padding: 20px;
+          max-width: 600px;
+          margin: 20px auto;
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .form-group {
+          margin-bottom: 15px;
+      }
+
+      .form-group label {
+          display: block;
+          margin-bottom: 5px;
+          font-weight: bold;
+      }
+
+      select {
+          width: 100%;
+          padding: 10px;
+          border-radius: 4px;
+          border: 1px solid #d7b5b5;
+          transition: border-color 0.3s;
+      }
+
+      select:focus {
+          border-color: #007bff;
+          outline: none;
+      }
+
+      .custom-button {
+          background-color: #0f70d7;
+          color: rgb(255, 255, 255);
+          border: none;
+          padding: 10px 15px;
+          border-radius: 4px;
+          cursor: pointer;
+          transition: background-color 0.3s;
+          width: 100%;
+          margin-top: 10px;
+      }
+
+      .custom-button:hover {
+          background-color: #2f87b7;
+      }
+
+      .elaboracion-section {
+          background: #4277d3;
+          padding: 15px;
+          border-radius: 5px;
+          margin-top: 20px;
+      }
     </style>
   </head>
   <body>
@@ -120,52 +175,57 @@
         {% endwith %}
 
         <h2>Por favor siga las instrucciones</h2>
-        <form method="POST" action="{{ url_for('cargar_productos') }}" enctype="multipart/form-data">
+        <form method="POST" action="{{ url_for('cargar_productos') }}" enctype="multipart/form-data" class="form-container">
             <!-- Combobox de máquinas -->
-            <label for="maquina" >Selecciona una máquina:</label>
-            <select name="maquina" id="maquina" onchange="this.form.submit()">
-                <option value="" >Seleccione una máquina</option>
-                {% for maquina in cola_maquinas %}
-                    <option value="{{ maquina.nombre_maquina }}" {% if maquina.nombre_maquina == maquina_seleccionada %}selected{% endif %}>
-                        {{ maquina.nombre_maquina }}
-                    </option>
-                {% endfor %}
-            </select>
+            <div class="form-group">
+                <label for="maquina">Selecciona una máquina:</label>
+                <select name="maquina" id="maquina" onchange="this.form.submit()">
+                    <option value="">Seleccione una máquina</option>
+                    {% for maquina in cola_maquinas %}
+                        <option value="{{ maquina.nombre_maquina }}" {% if maquina.nombre_maquina == maquina_seleccionada %}selected{% endif %}>
+                            {{ maquina.nombre_maquina }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
             
             <!-- Botón para cargar los productos de la máquina seleccionada -->
-            <button type="submit" class="custom-file-upload" >Cargar productos</button>
-        
+            <button type="submit" class="custom-button">Cargar productos</button>
+
             <!-- Combobox de productos de la máquina seleccionada -->
             {% if productos %}
-            <label for="producto">Selecciona un producto:</label>
-            <select name="producto" id="producto">
-                {% for producto in productos %}
-                    <option value="{{ producto.nombre_producto }}">{{ producto.nombre_producto }}</option>
-                {% endfor %}
-            </select>
+            <div class="form-group">
+                <label for="producto">Selecciona un producto:</label>
+                <select name="producto" id="producto">
+                    {% for producto in productos %}
+                        <option value="{{ producto.nombre_producto }}">{{ producto.nombre_producto }}</option>
+                    {% endfor %}
+                </select>
+            </div>
 
             <!-- Botón para mostrar la elaboración del producto seleccionado -->
-            <button type="submit" formaction="{{ url_for('mostrar_elaboracion') }}" class="custom-file-upload" >Elaboración</button>
+            <button type="submit" formaction="{{ url_for('mostrar_elaboracion') }}" class="custom-button">Elaboración</button>
             {% endif %}
 
-           <!-- Sección para mostrar la elaboración -->
-          {% if elaboracion %}
-          <div class="elaboracion-section">
-            <h3>Elaboración del Producto Seleccionado:</h3>
-            <p>{{ elaboracion }}</p>
-          </div>
-          {% endif %}
-
-          
-
-          </form>
+            <!-- Sección para mostrar la elaboración -->
+            {% if elaboracion %}
+            <div class="elaboracion-section">
+                <h3>Elaboración del Producto Seleccionado:</h3>
+                <p>{{ elaboracion }}</p>
+            </div>
+            {% endif %}
+        </form>
 
 
       {% elif tab == 'Tab2' %}
         <h2>REPORTE DEL HTML</h2>
            
         <h2>Tabla de Instrucciones</h2>
-        {{ tabla|safe }}  <!-- Muestra la tabla generada, 'safe' permite el renderizado de HTML -->
+        {% if tabla_html %}
+          {{ tabla_html|safe }}  <!-- Muestra la tabla generada, 'safe' permite el renderizado de HTML -->
+        {% else %}
+          <p>No hay datos para mostrar.</p>
+        {% endif %}
 
         <h2>REPORTE DE TDAS</h2>
         <!-- Mostrar la imagen generada -->
