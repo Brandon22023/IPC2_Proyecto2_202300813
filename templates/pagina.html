@@ -138,16 +138,17 @@
             <button type="submit" formaction="{{ url_for('mostrar_elaboracion') }}" class="custom-file-upload" >Elaboración</button>
             {% endif %}
 
-            <!-- Sección para mostrar la elaboración -->
-            {% if elaboracion %}
-              <div class="elaboracion-section">
-                <h3>Elaboración del Producto Seleccionado:</h3>
-                <p>{{ elaboracion }}</p>
-              </div>
-            {% endif %}
+           <!-- Sección para mostrar la elaboración -->
+          {% if elaboracion %}
+          <div class="elaboracion-section">
+            <h3>Elaboración del Producto Seleccionado:</h3>
+            <p>{{ elaboracion }}</p>
+          </div>
+          {% endif %}
 
-        </form>
-            
+          
+
+          </form>
 
 
       {% elif tab == 'Tab2' %}

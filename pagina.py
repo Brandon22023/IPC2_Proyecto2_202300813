@@ -191,7 +191,31 @@ class LecturaXML:
 #LOGICA --------------------------
 #otras clases donde se usan los nodos
 
+class Nodo_error:
+    def __init__(self, dato):
+        self.dato = dato
+        self.siguiente = None
 
+
+class ListaSimplementeEnlazada:
+    def __init__(self):
+        self.cabeza = None
+
+    def agregar(self, dato):
+        nuevo_nodo = Nodo_error(dato)
+        if not self.cabeza:
+            self.cabeza = nuevo_nodo
+        else:
+            actual = self.cabeza
+            while actual.siguiente:
+                actual = actual.siguiente
+            actual.siguiente = nuevo_nodo
+
+    def mostrar(self):
+        actual = self.cabeza
+        while actual:
+            print(actual.dato)
+            actual = actual.siguiente
 
 class Nodo2:
     def __init__(self, linea, componente):
@@ -315,12 +339,14 @@ class ListaContadores:
 class ProcesadorElaboracion:
     def __init__(self):
         self.lista_instrucciones = ListaDoblementeEnlazada()
+        self.errores = ListaSimplementeEnlazada()  # Usar lista simplemente enlazada para errores
 
-     # Método para procesar la elaboración de un producto sin usar listas, ni índices ni len()
+     # Método para procesar la elaboración de un producto sin usar listas
     def procesar_elaboracion(self, elaboracion):
         # PARA REINICIAR LOS VALORES PARA QUE NO HAYA NADA CUANDO SE VUELVA A USAR
 
         self.lista_instrucciones = ListaDoblementeEnlazada()
+        self.errores = ListaSimplementeEnlazada()  # Reiniciar la lista de errores
         # SE INICIA CON UN PUNTERO PARA IR BUSCANDO LO QUE SE NECESITA
         puntero = iter(elaboracion)
 
@@ -332,8 +358,8 @@ class ProcesadorElaboracion:
                     linea = int(next(puntero))  # Obtener el número de la línea
                     # Verificar si el número de la línea es 0
                     if linea == 0:
-                        raise ValueError(f"Error: Línea no puede ser 0. Encontrado en L{linea}.")
-                        #el raise crea una excepcion para determinar si llego un dato inesperado
+                        self.errores.agregar(f"Error: Línea no puede ser 0. Encontrado en L{linea}.")
+                        return "Error: Línea no puede ser 0."  # Retornar error
                     next(puntero)  # Saltar el caracter "C"
                     numero = ""  # Inicializamos la variable para almacenar el componente
                     # Leer el componente
@@ -350,7 +376,8 @@ class ProcesadorElaboracion:
                         componente = int(numero)
                         # Verificar si el componente es 0
                         if componente == 0:
-                            raise ValueError(f"Error: Componente no puede ser 0. Encontrado en C{componente}.")
+                            self.errores.agregar(f"Error: Componente no puede ser 0. Encontrado en C{componente}.")
+                            return "Error: Componente no puede ser 0."  # Retornar error
                             #el raise crea una excepcion para determinar si llego un dato inesperado
                         # Agregar la instrucción correspondiente a la lista doblemente enlazada
                         self.lista_instrucciones.agregar(linea, componente)
@@ -364,11 +391,6 @@ class ProcesadorElaboracion:
                         componente = int(numero)
                         self.lista_instrucciones.agregar(linea, componente)
                         self.lista_instrucciones.buscar_componente(componente)
-        except ValueError as e:
-            # Capturamos la excepción para manejar el error sin detener el programa
-            print(e)
-            print("Por favor, selecciona otro producto.")
-            return False  # Retornamos False para indicar que hubo un error
 
         except StopIteration:
             # Manejar el final del iterador
@@ -376,15 +398,20 @@ class ProcesadorElaboracion:
                 componente = int(numero)
                 # Verificar si el componente es 0
                 if componente == 0:
-                    raise ValueError(f"Error: Componente no puede ser 0. Encontrado en C{componente}.")
-                    #el raise crea una excepcion para determinar si llego un dato inesperado
+                    self.errores.agregar(f"Error: Componente no puede ser 0. Encontrado en C{componente}.")
+                    return "Error: Componente no puede ser 0."  # Retornar error
                 
                 self.lista_instrucciones.agregar(linea, componente)
                 self.lista_instrucciones.buscar_componente(componente)
             pass  # Fin del iterador
          # Generar las instrucciones basadas en los componentes procesados
         self.generar_instrucciones()
-        return True  # Retornamos True si todo salió bien
+        if self.errores.cabeza:
+            actual = self.errores.cabeza
+            while actual:
+                return actual.dato  # Retornar el mensaje de error
+
+        return None  # Retornar None si no hay errores
     
 
     def generar_instrucciones(self):  # Define un método llamado generar_instrucciones.
@@ -544,13 +571,21 @@ def mostrar_elaboracion():
     print("Producto seleccionado:", selected_producto)
     elaboracion = None
 
-    # Aquí puedes buscar la elaboración del producto en tu sistema de datos
     if selected_producto:
-        # Supongamos que tienes una función o una forma de obtener la elaboración del producto
-        # Esto es solo un ejemplo, deberías adaptarlo a tu lógica de negocio
         elaboracion = obtener_elaboracion_producto(selected_producto)
         print("Elaboración del producto:", elaboracion)
-        Procesa_elaboracion.procesar_elaboracion(elaboracion) # Instancia para procesar la elaboración.
+
+        # Verificar si se obtuvo la elaboración
+        if elaboracion is None:
+            flash('No se encontró la elaboración para el producto seleccionado.', 'error')
+            return redirect(url_for('tab1'))  # Redirigir a la ruta donde se carga el formulario
+
+        procesador = ProcesadorElaboracion()  # Crear una instancia para procesar la elaboración.
+        error = procesador.procesar_elaboracion(elaboracion)  # Procesar la elaboración.
+
+        if error:
+            flash(error, 'error')  # Mostrar el error en la interfaz
+            return redirect(url_for('tab1'))  # Redirigir a la ruta donde se carga el formulario
 
     # Pasar la información de elaboración al template
     return render_template('pagina.html', tab='Tab1', producto=selected_producto, elaboracion=elaboracion)
