@@ -8,7 +8,15 @@
       /* Estilos para las pestañas */
       .tab {
         overflow: hidden;
-        background-color: #f1f1f1;
+        background-color: #359adc;
+      }
+      body {
+            background-image: url("{{ url_for('static', filename='zorro.jpg') }}"); /* Asegúrate de que la ruta sea correcta */
+            background-size: cover; /* Ajusta la imagen para cubrir toda la pantalla */
+            background-position: center; /* Centra la imagen */
+            background-repeat: no-repeat; /* No repite la imagen */
+            background-attachment: fixed; /* Mantiene la imagen fija al hacer scroll */
+            color: white; /* Cambia el color del texto si es necesario para que se vea mejor con el fondo */
       }
 
       .tab a {
@@ -17,22 +25,22 @@
         text-decoration: none;
         transition: 0.3s;
         color: black;
-        border: 1px solid #ccc;
+        border: 2px solid #1f77b2;
         margin-right: 4px;
       }
 
       .tab a:hover {
-        background-color: #ddd;
+        background-color: rgb(53, 103, 220);
       }
 
       .tab a.active {
-        background-color: #ccc;
+        background-color: #359adc;
       }
 
       /* Estilos para el contenido de las pestañas */
       .tabcontent {
         padding: 6px 12px;
-        border: 1px solid #ccc;
+        border: 2px solid #0a6aa9;
         margin-top: 10px;
       }
       /* Ocultar el input file original */
@@ -45,7 +53,7 @@
         display: inline-block;
         padding: 10px 20px;
         cursor: pointer;
-        background-color: #007bff;
+        background-color: #59de34;
         color: white;
         border: none;
         border-radius: 4px;
@@ -72,7 +80,7 @@
         border-radius: 4px;
       }
       .elaboracion-section {
-          background-color: #87CEEB; /* Celeste */
+          background-color: #052430; /* Celeste */
           padding: 20px;             /* Espaciado interno */
           border-radius: 5px;        /* Bordes redondeados */
           margin-top: 20px;          /* Espacio superior */
@@ -92,6 +100,8 @@
     <!-- Contenido de las pestañas -->
     <div class="tabcontent">
       {% if tab == 'Tab1' %}
+      <!-- Mostrar la imagen generada solo en Tab1 -->
+        
         <h2>Por favor seleccione el archivo</h2>
         <p></p>
          <!-- Formulario para cargar el archivo -->
@@ -153,8 +163,15 @@
 
       {% elif tab == 'Tab2' %}
         <h2>REPORTE DEL HTML</h2>
-        <p>usar tabla de resultados</p>
+           
+        <h2>Tabla de Instrucciones</h2>
+        {{ tabla|safe }}  <!-- Muestra la tabla generada, 'safe' permite el renderizado de HTML -->
+
         <h2>REPORTE DE TDAS</h2>
+        <!-- Mostrar la imagen generada -->
+        <img src="{{ url_for('static', filename='elaboracion_producto.png') }}" alt="Elaboración del Producto" />
+
+    <!-- Otras partes de tu página aquí -->
       {% elif tab == 'Tab3' %}
         <h2>DATOS: </h2>
         <p>Nombre: Brandon Antonio Marroquín Pérez</p>

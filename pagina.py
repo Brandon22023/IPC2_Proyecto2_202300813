@@ -1,12 +1,13 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
 import xml.etree.ElementTree as ET
+import graphviz
 app = Flask(__name__)
 app.secret_key = 'clave_secreta_para_flash'  # Clave para usar los mensajes flash
 # Clases para manejar las colas de máquinas y productos
 class Nodo_PARA_MAQUINAS:
     def __init__(self, data):
         self.data = data
-        self.siguiente = None
+        self.siguiente = None   
 
 class Cola_MAQUINAS:
     def __init__(self):
@@ -92,6 +93,39 @@ class Cola_PRODUCTOS:
             yield actual.data
             actual = actual.siguiente
 
+
+class Nodo_c:
+    def __init__(self, dato):
+        self.dato = dato
+        self.siguiente = None
+
+
+class ListaCircular_L:
+    def __init__(self):
+        self.ultimo = None
+
+    def esta_vacia(self):
+        return self.ultimo is None
+
+    def encolar(self, dato):
+        nuevo_nodo = Nodo_c(dato)
+        if self.esta_vacia():
+            self.ultimo = nuevo_nodo
+            nuevo_nodo.siguiente = nuevo_nodo  # Apunta a sí mismo
+        else:
+            nuevo_nodo.siguiente = self.ultimo.siguiente
+            self.ultimo.siguiente = nuevo_nodo
+            self.ultimo = nuevo_nodo
+
+    def desencolar(self):
+        if self.esta_vacia():
+            return None
+        nodo_salida = self.ultimo.siguiente
+        if nodo_salida == self.ultimo:  # Solo hay un nodo
+            self.ultimo = None
+        else:
+            self.ultimo.siguiente = nodo_salida.siguiente
+        return nodo_salida.dato
 # Clases para manejar máquinas y productos
 class Producto:
     def __init__(self, nombre_producto, elaboracion):
@@ -107,6 +141,35 @@ class Maquina:
         self.tiempo_ensamblaje = tiempo_ensamblaje
         self.productos = ListaEnlazada()  # Inicializa la lista enlazada para productos
 
+class Nodo_2:
+    def __init__(self, dato):
+        self.dato = dato
+        self.siguiente = None
+
+class Cola:
+    def __init__(self):
+        self.frente = None
+        self.final = None
+
+    def encolar(self, dato):
+        nuevo_nodo = Nodo_2(dato)
+        if self.final:
+            self.final.siguiente = nuevo_nodo
+        self.final = nuevo_nodo
+        if not self.frente:
+            self.frente = nuevo_nodo
+
+    def desencolar(self):
+        if not self.frente:
+            return None
+        dato = self.frente.dato
+        self.frente = self.frente.siguiente
+        if not self.frente:
+            self.final = None
+        return dato
+
+    def esta_vacia(self):
+        return self.frente is None
 class Nodo:
     def __init__(self, data):
         self.data = data
@@ -217,6 +280,42 @@ class ListaSimplementeEnlazada:
             print(actual.dato)
             actual = actual.siguiente
 
+class NodoInstruccion:
+    def __init__(self, bloque, linea, componente, instruccion):
+        self.bloque = bloque
+        self.linea = linea
+        self.componente = componente
+        self.instruccion = instruccion
+        self.siguiente = None  # Apunta al siguiente nodo
+
+class ListaCircularSimplementeEnlazada:
+    def __init__(self):
+        self.primero = None  # Nodo inicial
+
+    def agregar(self, bloque, linea, componente, instruccion):
+        nuevo_nodo = NodoInstruccion(bloque, linea, componente, instruccion)
+        if self.primero is None:
+            self.primero = nuevo_nodo
+            nuevo_nodo.siguiente = nuevo_nodo  # Apunta a sí mismo (circular)
+        else:
+            actual = self.primero
+            while actual.siguiente != self.primero:  # Busca el último nodo
+                actual = actual.siguiente
+            actual.siguiente = nuevo_nodo
+            nuevo_nodo.siguiente = self.primero  # Apunta al primero para mantener la circularidad
+
+    def obtener_instrucciones(self):
+        if self.primero is None:
+            return  # No hay instrucciones
+        actual = self.primero
+        instrucciones_str = ""  # Cadena para almacenar las instrucciones
+        while True:
+            instrucciones_str += f"{actual.bloque} {actual.linea} {actual.componente} {actual.instruccion}\n"
+            print(f"{actual.bloque} {actual.linea} {actual.componente} {actual.instruccion}")
+            actual = actual.siguiente
+            if actual == self.primero:  # Vuelve al inicio
+                break
+        return instrucciones_str
 class Nodo2:
     def __init__(self, linea, componente):
         self.linea = linea  # Línea de ensamblaje
@@ -224,7 +323,8 @@ class Nodo2:
         self.siguiente = None  # Apunta al siguiente nodo
         self.anterior = None  # Apunta al nodo anterior
         self.ensamblado = False  # Indica si el componente ha sido ensamblado
-    
+
+
 class ListaDoblementeEnlazada:
     def __init__(self):
         self.primero = None
@@ -340,11 +440,12 @@ class ProcesadorElaboracion:
     def __init__(self):
         self.lista_instrucciones = ListaDoblementeEnlazada()
         self.errores = ListaSimplementeEnlazada()  # Usar lista simplemente enlazada para errores
+        self.instrucciones_lista = ListaCircularSimplementeEnlazada()  # Asegúrate de que ListaCircular esté definida correctamente.
 
      # Método para procesar la elaboración de un producto sin usar listas
     def procesar_elaboracion(self, elaboracion):
         # PARA REINICIAR LOS VALORES PARA QUE NO HAYA NADA CUANDO SE VUELVA A USAR
-
+        
         self.lista_instrucciones = ListaDoblementeEnlazada()
         self.errores = ListaSimplementeEnlazada()  # Reiniciar la lista de errores
         # SE INICIA CON UN PUNTERO PARA IR BUSCANDO LO QUE SE NECESITA
@@ -414,75 +515,117 @@ class ProcesadorElaboracion:
         return None  # Retornar None si no hay errores
     
 
-    def generar_instrucciones(self):  # Define un método llamado generar_instrucciones.
-        # Reiniciar los valores al inicio de la función
-        max_componente_global = 0  # Inicializa max_componente_global a 0, que mantendrá el valor del componente más alto.
-        max_linea = 0  # Inicializa max_linea a 0, que mantendrá el valor de la línea más alta.
-        contador_bloques = 1  # Inicializa contador_bloques a 1, que se usará para llevar el conteo de los bloques de instrucciones.
+    def generar_instrucciones(self):
+        max_componente_global = 0  
+        max_linea = 0  
+        contador_bloques = 1  
+        instrucciones_str = ""  
+        ensamblajes_pendientes = ListaDoblementeEnlazada()  
+        max_por_linea = ListaDoblementeEnlazada()  
+        actual = self.lista_instrucciones.primero  
 
-        # Lista para almacenar ensamblajes pendientes por línea y componente
-        ensamblajes_pendientes = ListaDoblementeEnlazada()  # Crea una lista doblemente enlazada para almacenar ensamblajes pendientes.
+        # Lista circular para almacenar las instrucciones
+        instrucciones_lista = ListaCircularSimplementeEnlazada()  # Usar lista circular
 
-        # Primer recorrido: obtenemos los máximos componentes por cada línea
-        max_por_linea = ListaDoblementeEnlazada()  # Crea una lista doblemente enlazada para almacenar los máximos componentes por línea.
-        actual = self.lista_instrucciones.primero  # Inicializa la variable actual con el primer nodo de lista_instrucciones.
+        while actual is not None:  
+            if actual.componente > max_componente_global:  
+                max_componente_global = actual.componente  
 
-        while actual is not None:  # Itera a través de la lista de instrucciones hasta que no haya más elementos.
-            # Actualizamos el máximo componente global si es necesario
-            if actual.componente > max_componente_global:  # Si el componente actual es mayor que max_componente_global...
-                max_componente_global = actual.componente  # Actualiza max_componente_global con el valor del componente actual.
+            if actual.linea > max_linea:  
+                max_linea = actual.linea  
 
-            # Actualizamos el máximo número de línea
-            if actual.linea > max_linea:  # Si la línea actual es mayor que max_linea...
-                max_linea = actual.linea  # Actualiza max_linea con el valor de la línea actual.
+            max_por_linea.agregar(actual.linea, actual.componente)  
+            actual = actual.siguiente  
 
-            # Agregar el componente a la lista de máximos por línea
-            max_por_linea.agregar(actual.linea, actual.componente)  # Agrega la línea y el componente actual a max_por_linea.
+        contadores = ListaContadores()  
+        for linea in range(1, max_linea + 1):  
+            contadores.agregar(linea)  
 
-            actual = actual.siguiente  # Avanza al siguiente nodo en la lista de instrucciones.
+        for componente in range(1, max_componente_global + 1):  
+            print(f"contador {contador_bloques}")  
 
-        # Inicializamos contadores para cada línea
-        contadores = ListaContadores()  # Crea una instancia de ListaContadores para manejar contadores para cada línea.
-        for linea in range(1, max_linea + 1):  # Itera sobre cada línea desde 1 hasta max_linea.
-            contadores.agregar(linea)  # Agrega un contador para cada línea.
+            for linea_actual in range(1, max_linea + 1):  
+                actual = self.lista_instrucciones.primero  
+                movimiento_detectado = False  
 
-        # Generamos las instrucciones agrupadas por línea y componente
-        for componente in range(1, max_componente_global + 1):  # Itera sobre cada componente desde 1 hasta max_componente_global.
-            print(f"contador {contador_bloques}")  # Imprime el valor actual de contador_bloques.
+                while actual is not None:  
+                    if actual.linea == linea_actual and actual.componente == componente:  
+                        instruccion = f"L{linea_actual}C{componente} = mover brazo componente {componente}"
+                        movimiento_detectado = True  
+                        contadores.incrementar_contador(linea_actual)  
+                        ensamblajes_pendientes.agregar(actual.linea, actual.componente)  
 
-            # Iterar por cada línea y verificar si se deben realizar movimientos o ensamblajes
-            for linea_actual in range(1, max_linea + 1):  # Itera sobre cada línea desde 1 hasta max_linea.
-                actual = self.lista_instrucciones.primero  # Reinicia la variable actual al primer nodo de lista_instrucciones.
-                movimiento_detectado = False  # Inicializa un flag para detectar si se realizó un movimiento.
+                        # Agregar a la lista circular de instrucciones
+                        instrucciones_lista.agregar(contador_bloques, linea_actual, componente, instruccion)
+                    actual = actual.siguiente  
 
-                while actual is not None:  # Itera a través de lista_instrucciones hasta que no haya más nodos.
-                    if actual.linea == linea_actual and actual.componente == componente:  # Si la línea y el componente coinciden con los actuales...
-                        print(f"L{linea_actual}C{componente} = mover brazo componente, listo para ensamblar {componente}")  # Imprime la instrucción de movimiento.
-                        movimiento_detectado = True  # Marca que se ha detectado un movimiento.
-                        contadores.incrementar_contador(linea_actual)  # Incrementa el contador para la línea actual.
-                        # Guardar el ensamblaje para la próxima ronda
-                        ensamblajes_pendientes.agregar(actual.linea, actual.componente)  # Agrega el ensamblaje actual a ensamblajes_pendientes.
-                    actual = actual.siguiente  # Avanza al siguiente nodo en la lista de instrucciones.
+                ensamblaje_actual = ensamblajes_pendientes.primero  
+                while ensamblaje_actual is not None:  
+                    if ensamblaje_actual.componente == componente - 1 and ensamblaje_actual.linea == linea_actual and not ensamblaje_actual.ensamblado:  
+                        instruccion = f"L{ensamblaje_actual.linea}C{ensamblaje_actual.componente} = ensamblaje {ensamblaje_actual.componente}"
+                        instrucciones_str += instruccion + "\n"  
+                        ensamblaje_actual.ensamblado = True  
+                        contadores.incrementar_contador(ensamblaje_actual.linea)  
 
-                # Verificar si hay ensamblajes pendientes que deben ser ensamblados para la línea actual
-                ensamblaje_actual = ensamblajes_pendientes.primero  # Inicializa ensamblaje_actual con el primer nodo de ensamblajes_pendientes.
-                while ensamblaje_actual is not None:  # Itera sobre los ensamblajes pendientes hasta que no haya más nodos.
-                    if ensamblaje_actual.componente == componente - 1 and ensamblaje_actual.linea == linea_actual and not ensamblaje_actual.ensamblado:  # Si es el turno de ensamblar el componente anterior...
-                        print(f"L{ensamblaje_actual.linea}C{ensamblaje_actual.componente} = ensamblaje {ensamblaje_actual.componente}")  # Imprime la instrucción de ensamblaje.
-                        ensamblaje_actual.ensamblado = True  # Marca el componente como ensamblado.
-                        contadores.incrementar_contador(ensamblaje_actual.linea)  # Incrementa el contador para la línea del ensamblaje.
-                        break  # Rompe el bucle si se encuentra el ensamblaje correspondiente.
-                    ensamblaje_actual = ensamblaje_actual.siguiente  # Avanza al siguiente ensamblaje pendiente.
-                    
-                if not movimiento_detectado:  # Si no se detectó movimiento en la línea actual...
-                    max_componente_en_linea = max_por_linea.obtener_max_componente_por_linea(linea_actual)  # Obtiene el componente máximo para la línea actual.
-                    if componente <= max_componente_en_linea:  # Si el componente actual es menor o igual que el máximo de la línea...
-                        print(f"L{linea_actual}C{componente} = mover brazo componente {componente}")  # Imprime la instrucción de movimiento.
-                    else:  # Si no hay componentes para mover...
-                        print(f"L{linea_actual}C{componente} = No hacer nada")  # Imprime "No hacer nada" para la línea y componente actual.
+                        # Agregar a la lista circular de instrucciones
+                        instrucciones_lista.agregar(contador_bloques, ensamblaje_actual.linea, ensamblaje_actual.componente, instruccion)
+                        break  
+                    ensamblaje_actual = ensamblaje_actual.siguiente  
 
-            contador_bloques += 1  # Incrementa el contador de bloques.
-            print()  # Imprime una línea en blanco como separador entre contadores.
+                if not movimiento_detectado:  
+                    max_componente_en_linea = max_por_linea.obtener_max_componente_por_linea(linea_actual)  
+                    if componente <= max_componente_en_linea:  
+                        instruccion = f"L{linea_actual}C{componente} = mover brazo componente {componente}"
+                        instrucciones_str += instruccion + "\n"
+                        instrucciones_lista.agregar(contador_bloques, linea_actual, componente, instruccion)  
+                    else:  
+                        instruccion = f"L{linea_actual}C{componente} = No hacer nada"
+                        instrucciones_str += instruccion + "\n"
+                        instrucciones_lista.agregar(contador_bloques, linea_actual, componente, instruccion)
+            instrucciones_lista.obtener_instrucciones()
+            contador_bloques += 1  
+            print()  
+        print("contenido")
+        instrucciones_lista.obtener_instrucciones()
+        self.generar_html_tabla()
+        # Guardar la lista de instrucciones para uso posterior
+        self.instrucciones_lista = instrucciones_lista  # Guardar en un atributo de la clase
+        return instrucciones_lista
+    
+    def generar_html_tabla(self):
+        html = "<table border='1'>\n"  
+        html += "<tr><th>Bloque</th><th>Línea</th><th>Componente</th><th>Instrucción</th></tr>\n"
+
+        if self.instrucciones_lista.primero is None:
+            html += "<tr><td colspan='4'>No hay instrucciones para mostrar</td></tr>\n"
+            html += "</table>"
+            return html
+
+        actual = self.instrucciones_lista.primero  
+        while True:
+            # Extrae la información de cada nodo
+            bloque = actual.bloque
+            linea = actual.linea
+            componente = actual.componente
+            instruccion = actual.instruccion
+
+            # Agrega una fila a la tabla
+            html += "<tr>"
+            html += f"<td>{bloque}</td>"
+            html += f"<td>{linea}</td>"
+            html += f"<td>{componente}</td>"
+            html += f"<td>{instruccion}</td>"
+            html += "</tr>\n"
+
+            actual = actual.siguiente
+            if actual == self.instrucciones_lista.primero:  
+                break
+
+        html += "</table>"
+        return html
+
+    
+
 
 #------------------------
 Procesa_elaboracion = ProcesadorElaboracion()
@@ -587,12 +730,44 @@ def mostrar_elaboracion():
             flash(error, 'error')  # Mostrar el error en la interfaz
             return redirect(url_for('tab1'))  # Redirigir a la ruta donde se carga el formulario
 
+        # Generar el gráfico de la elaboración
+        dot = graphviz.Digraph(comment='Elaboración del Producto', graph_attr={'rankdir': 'LR'})  # Orientación horizontal
+
+        # Crear la lista circular para los bloques de elaboración
+        bloques = ListaCircular_L()
+
+        # Separar la cadena en bloques
+        partes = elaboracion.split(' ')
+
+        # Encolar cada parte en la lista circular
+        for parte in partes:
+            bloques.encolar(parte.strip())  # Agregar la parte sin espacios
+
+        # Crear nodos y aristas en el gráfico
+        if not bloques.esta_vacia():
+            bloque_actual = bloques.desencolar()  # Obtener el primer bloque
+            dot.node(bloque_actual, bloque_actual, style='filled', fillcolor='lightblue')  # Color del nodo
+
+            # Preparar contenido para archivo .org
+            org_content = "* Elaboración del Producto\n"
+
+            while not bloques.esta_vacia():
+                bloque_siguiente = bloques.desencolar()
+                dot.node(bloque_siguiente, bloque_siguiente, style='filled', fillcolor='lightgreen')  # Color del nodo
+                dot.edge(bloque_actual, bloque_siguiente)
+                org_content += f"** {bloque_actual}\n"  # Añadir nodo al contenido de .org
+                bloque_actual = bloque_siguiente
+
+            # Añadir el último bloque al contenido de .org
+            org_content += f"** {bloque_actual}\n"
+
+        # Renderizar la gráfica
+        dot.render('static/elaboracion_producto', format='png')  # Guardar en la carpeta static
     # Pasar la información de elaboración al template
     return render_template('pagina.html', tab='Tab1', producto=selected_producto, elaboracion=elaboracion)
 @app.route('/tab2')
 def tab2():
     return render_template('pagina.html', tab='Tab2')
-
 
 
 @app.route('/tab3')

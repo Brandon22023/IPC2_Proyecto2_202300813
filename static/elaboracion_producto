@@ -1,0 +1,13 @@
+// Elaboración del Producto
+digraph {
+	graph [rankdir=LR]
+	L2C5 [label=L2C5 fillcolor=lightblue style=filled]
+	L1C6 [label=L1C6 fillcolor=lightgreen style=filled]
+	L2C5 -> L1C6
+	L2C12 [label=L2C12 fillcolor=lightgreen style=filled]
+	L1C6 -> L2C12
+	L3C4 [label=L3C4 fillcolor=lightgreen style=filled]
+	L2C12 -> L3C4
+	L3C10 [label=L3C10 fillcolor=lightgreen style=filled]
+	L3C4 -> L3C10
+}
